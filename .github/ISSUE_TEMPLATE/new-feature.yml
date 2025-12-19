@@ -10,4 +10,3 @@ body:
       placeholder: Feature description
     validations:
       required: true
-  - type: textarea
