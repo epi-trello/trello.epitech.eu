@@ -26,6 +26,8 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
+  boards        Board[]
+
   @@unique([email])
   @@map("user")
 }
@@ -76,4 +78,67 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model Board {
+  id        String    @id
+  name      String
+  ownerId   String
+  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  Lists     List[]
+  labels    Label[]
+}
+
+model List {
+  id        String    @id
+  title     String
+  position  Float
+  color     Color     @default(GRAY)
+  boardId   String
+  board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  cards     Card[]
+}
+
+model Card {
+  id          String    @id
+  title       String
+  description String?
+  position    Float
+  startDate   DateTime?
+  dueDate     DateTime?
+  listId      String
+  list        List      @relation(fields: [listId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  labels      Label[]
+}
+
+model Label {
+  id        String    @id
+  name      String
+  color     Color     @default(BLUE)
+  boardId   String
+  board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  cards     Card[]
+}
+
+enum Color {
+  GRAY
+  RED
+  YELLOW
+  GREEN
+  SKY
+  BLUE
+  VIOLET
+  PINK
 }
