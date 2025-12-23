@@ -1,6 +1,6 @@
-name: "🚀 New feature"
+name: '🚀 New feature'
 description: New feature that will improve EpiTrello
-labels: ["pending triage"]
+labels: ['pending triage']
 body:
   - type: textarea
     id: feature-description
