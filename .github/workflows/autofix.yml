@@ -3,7 +3,7 @@ name: autofix.ci # needed to securely identify the workflow
 on:
   pull_request:
     branches:
-      - beta
+      - main
 
 permissions:
   contents: read
