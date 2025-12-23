@@ -19,6 +19,7 @@ jobs:
           node-version: lts/*
           cache: 'pnpm'
       - run: pnpm install --ignore-scripts
+      - run: pnpm nuxt prepare
       - run: pnpm lint:fix
       - uses: autofix-ci/action@635ffb0c9798bd160680f18fd73371e355b85f27
         with:
