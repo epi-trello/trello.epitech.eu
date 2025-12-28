@@ -1,3 +1,5 @@
+import { generateId } from 'better-auth'
+
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession(event)
 
@@ -5,7 +7,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  const { data, error } = await readValidatedBody(event, ListInputSchema.partial().safeParse)
+  const { data, error } = await readValidatedBody(event, ListInputSchema.safeParse)
 
   if (error) {
     throw createError({
@@ -16,11 +18,15 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const id = getRouterParam(event, 'id')
-  const list = await prisma.list.update({
-    where: { id, board: { ownerId: session.user.id } },
-    data
+  const board = await prisma.list.create({
+    data: {
+      id: generateId(),
+      title: data.title,
+      position: data.position,
+      color: data.color,
+      boardId: data.boardId
+    }
   })
 
-  return list
+  return board
 })

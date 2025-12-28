@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../server/generated/prisma"
+  output   = "./generated"
 }
 
 datasource db {
@@ -88,8 +88,10 @@ model Board {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  Lists     List[]
+  lists     List[]
   labels    Label[]
+
+  @@map("board")
 }
 
 model List {
@@ -103,6 +105,8 @@ model List {
   updatedAt DateTime  @updatedAt
 
   cards     Card[]
+
+  @@map("list")
 }
 
 model Card {
@@ -118,6 +122,8 @@ model Card {
   updatedAt   DateTime  @updatedAt
 
   labels      Label[]
+
+  @@map("card")
 }
 
 model Label {
@@ -130,6 +136,8 @@ model Label {
   updatedAt DateTime  @updatedAt
 
   cards     Card[]
+
+  @@map("label")
 }
 
 enum Color {
