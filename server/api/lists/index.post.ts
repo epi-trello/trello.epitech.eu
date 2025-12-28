@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 422,
       statusMessage: 'Unprocessable Content',
-      message: error.issues[0].message,
+      message: error.issues[0]?.message,
       data: error.issues
     })
   }
