@@ -129,7 +129,7 @@ model Card {
 model Label {
   id        String    @id
   name      String
-  color     Color     @default(BLUE)
+  color     String    @db.VarChar(7)
   boardId   String
   board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
   createdAt DateTime  @default(now())

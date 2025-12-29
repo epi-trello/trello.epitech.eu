@@ -19,3 +19,9 @@ export const CardInputSchema = z.object({
   dueDate: z.string().optional(),
   listId: z.string()
 })
+
+export const LabelInputSchema = z.object({
+  name: z.string().max(255),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
+  boardId: z.string()
+})
