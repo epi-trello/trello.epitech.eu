@@ -25,7 +25,8 @@ jobs:
 
             const pr = {
               number: ${{ github.event.pull_request.number }},
-              title: process.env.PULL_REQUEST_TITLE
+              title: process.env.PULL_REQUEST_TITLE,
+              labels: context.payload.pull_request.labels
             }
 
             const typeMapping = {
@@ -53,31 +54,32 @@ jobs:
 
               console.log(`Detected Type: ${type || 'N/A'}`)
               console.log(`Detected Scope: ${scope || 'N/A'}`)
-            }
 
-            if (type && typeMapping[type]) {
-              labelsToAdd.push(typeMapping[type])
-            }
-
-            if (scope && scopeMapping[scope]) {
-              labelsToAdd.push(scopeMapping[scope])
-            }
-
-            if (labelsToAdd.length > 0) {
-              const currentLabels = pr.labels.map((l) => l.name)
-              const uniqueLabels = labelsToAdd.filter((l) => !currentLabels.includes(l))
-
-              if (uniqueLabels.length > 0) {
-                await github.issues.addLabels({
-                  issue_number: pr.number,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  labels: uniqueLabels
-                })
-                console.log(`Added labels: ${uniqueLabels.join(', ')}`)
-              } else {
-                console.log('No new labels to add.')
+              if (type && typeMapping[type]) {
+                labelsToAdd.push(typeMapping[type])
               }
-            } else {
-              console.log('No matching type or scope found in PR title.')
+
+              if (scope && scopeMapping[scope]) {
+                labelsToAdd.push(scopeMapping[scope])
+              }
+
+              if (labelsToAdd.length > 0) {
+                const currentLabels = pr.labels.map((l) => l.name)
+                const uniqueLabels = labelsToAdd.filter((l) => !currentLabels.includes(l))
+
+                if (uniqueLabels.length > 0) {
+                  await github.rest.issues.addLabels({
+                    issue_number: pr.number,
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    labels: uniqueLabels
+                  })
+                  console.log(`Added labels: ${uniqueLabels.join(', ')}`)
+                } else {
+                  console.log('No new labels to add.')
+                }
+
+                return
+              }
             }
+            console.log('No matching type or scope found in PR title.')
