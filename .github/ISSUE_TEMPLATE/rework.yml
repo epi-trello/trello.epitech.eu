@@ -1,0 +1,13 @@
+name: '♻️ Rework'
+description: Restructuring or modifying existing code without adding new features
+labels: ['pending triage']
+type: rework
+body:
+  - type: textarea
+    id: rework-description
+    attributes:
+      label: Description of the rework
+      description: What specific part of the code or architecture needs to be changed?
+      placeholder: ex. Renaming API routes for consistency...
+    validations:
+      required: true
