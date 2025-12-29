@@ -6,10 +6,20 @@ export default defineEventHandler(async (event) => {
   }
 
   const id = getRouterParam(event, 'id')
-  const body = await readBody(event)
+  const { data, error } = await readValidatedBody(event, BoardInputSchema.safeParse)
+
+  if (error) {
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'Unprocessable Content',
+      message: error.issues[0]?.message,
+      data: error.issues
+    })
+  }
+
   const board = await prisma.board.update({
     where: { id, ownerId: session.user.id },
-    data: body
+    data
   })
 
   return board

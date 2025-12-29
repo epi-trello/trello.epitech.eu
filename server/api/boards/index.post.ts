@@ -7,11 +7,21 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  const body = await readBody(event)
+  const { data, error } = await readValidatedBody(event, BoardInputSchema.safeParse)
+
+  if (error) {
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'Unprocessable Content',
+      message: error.issues[0]?.message,
+      data: error.issues
+    })
+  }
+
   const board = await prisma.board.create({
     data: {
       id: generateId(),
-      name: body.name,
+      name: data.name,
       ownerId: session.user.id
     }
   })

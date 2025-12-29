@@ -1,5 +1,9 @@
 import { z } from 'zod'
 
+export const BoardInputSchema = z.object({
+  name: z.string().max(255)
+})
+
 export const ListInputSchema = z.object({
   title: z.string().max(255),
   position: z.number().min(0),
@@ -14,4 +18,4 @@ export const CardInputSchema = z.object({
   startDate: z.string().optional(),
   dueDate: z.string().optional(),
   listId: z.string()
-})
+)}
