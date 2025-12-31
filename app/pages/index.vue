@@ -3,8 +3,8 @@ definePageMeta({
   auth: false
 })
 
-type BoardCard = { title: string; badge?: string; label?: string; users?: string[] }
-type BoardList = { title: string; color: string; cards: BoardCard[] }
+type BoardCard = { title: string, badge?: string, label?: string, users?: string[] }
+type BoardList = { title: string, color: string, cards: BoardCard[] }
 
 const boardLists: BoardList[] = [
   {
@@ -85,7 +85,10 @@ const features = [
 
       <div class="relative mx-auto flex max-w-6xl flex-col gap-10 px-6 py-12 sm:gap-12 sm:py-16">
         <HomeHero>
-          <BoardPreview board-title="Lancement produit" :lists="boardLists" />
+          <BoardPreview
+            board-title="Lancement produit"
+            :lists="boardLists"
+          />
         </HomeHero>
 
         <FeatureGrid

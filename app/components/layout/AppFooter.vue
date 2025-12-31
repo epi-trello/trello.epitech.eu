@@ -5,8 +5,9 @@
         <span class="flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 text-white">TF</span>
         <span>TaskFlow</span>
       </div>
-      <p class="text-slate-500">Construisez vos flux comme sur Trello, à votre rythme.</p>
+      <p class="text-slate-500">
+        Construisez vos flux comme sur Trello, à votre rythme.
+      </p>
     </div>
   </footer>
 </template>
-

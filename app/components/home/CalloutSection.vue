@@ -5,8 +5,12 @@
   >
     <div class="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
       <div class="space-y-3">
-        <p class="text-xs font-semibold uppercase tracking-[0.25em] text-indigo-200">Collab</p>
-        <h2 class="text-2xl font-semibold sm:text-3xl">Construisez vos boards en équipe</h2>
+        <p class="text-xs font-semibold uppercase tracking-[0.25em] text-indigo-200">
+          Collab
+        </p>
+        <h2 class="text-2xl font-semibold sm:text-3xl">
+          Construisez vos boards en équipe
+        </h2>
         <p class="max-w-2xl text-sm text-indigo-100 sm:text-base">
           Invitez vos collègues, répartissez les responsabilités et gardez la visibilité en un clin
           d’œil. Chaque colonne reflète un état clair, chaque carte une action précise.
@@ -30,4 +34,3 @@
     </div>
   </section>
 </template>
-

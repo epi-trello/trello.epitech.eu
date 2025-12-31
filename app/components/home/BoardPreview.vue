@@ -26,7 +26,9 @@ defineProps<{
     <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
       <div class="flex items-center gap-2">
         <span class="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-        <p class="text-sm font-semibold text-slate-900">{{ boardTitle }}</p>
+        <p class="text-sm font-semibold text-slate-900">
+          {{ boardTitle }}
+        </p>
       </div>
       <div class="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-slate-400">
         <span class="inline-flex h-6 items-center rounded-full bg-slate-100 px-3 font-semibold text-slate-700">
@@ -46,8 +48,13 @@ defineProps<{
       >
         <header class="flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span class="h-2.5 w-2.5 rounded-full" :style="{ background: list.color }" />
-            <p class="text-sm font-semibold text-slate-800">{{ list.title }}</p>
+            <span
+              class="h-2.5 w-2.5 rounded-full"
+              :style="{ background: list.color }"
+            />
+            <p class="text-sm font-semibold text-slate-800">
+              {{ list.title }}
+            </p>
           </div>
           <button
             type="button"
@@ -65,7 +72,9 @@ defineProps<{
             class="flex flex-col gap-2 rounded-md border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md"
           >
             <div class="flex items-start justify-between gap-2">
-              <p class="text-sm font-semibold text-slate-900">{{ card.title }}</p>
+              <p class="text-sm font-semibold text-slate-900">
+                {{ card.title }}
+              </p>
               <span
                 v-if="card.badge"
                 class="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-700"
