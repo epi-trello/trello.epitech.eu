@@ -7,6 +7,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
+  const boardId = getRouterParam(event, 'id')
+
+  if (!boardId) {
+    throw createError({ statusCode: 400, statusMessage: 'Bad Request' })
+  }
+
   const { data, error } = await readValidatedBody(event, ListInputSchema.safeParse)
 
   if (error) {
@@ -18,15 +24,15 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const board = await prisma.list.create({
+  const list = await prisma.list.create({
     data: {
       id: generateId(),
       title: data.title,
       position: data.position,
       color: data.color,
-      boardId: data.boardId
+      boardId
     }
   })
 
-  return board
+  return list
 })

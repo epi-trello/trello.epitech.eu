@@ -1,0 +1,91 @@
+name: chore
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - edited
+    branches:
+      - main
+
+permissions:
+  pull-requests: write
+
+jobs:
+  label-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/github-script@v8.0.0
+        env:
+          PULL_REQUEST_TITLE: ${{ github.event.pull_request.title }}
+        with:
+          script: |
+            const labelsToAdd = []
+
+            const pr = {
+              number: ${{ github.event.pull_request.number }},
+              title: process.env.PULL_REQUEST_TITLE,
+              labels: context.payload.pull_request.labels
+            }
+
+            const typeMapping = {
+              feat: 'enhancement',
+              refactor: 'enhancement',
+              fix: 'bug',
+              docs: 'documentation'
+            }
+
+            const scopeMapping = {
+              api: 'backend',
+              backend: 'backend',
+              server: 'backend',
+              ui: 'frontend',
+              frontend: 'frontend',
+              client: 'frontend'
+            }
+
+            const regex = /^([a-z]+)(?:\(([^)]+)\))?(!)?:/
+            const match = pr.title.match(regex)
+
+            if (match) {
+              const type = match[1]
+              const scope = match[2]
+              const isBreaking = !!match[3]
+
+              console.log(`Detected Type: ${type || 'N/A'}`)
+              console.log(`Detected Scope: ${scope || 'N/A'}`)
+              console.log(`Detected Breaking: ${isBreaking ? 'Yes' : 'No'}`)
+
+              if (type && typeMapping[type]) {
+                labelsToAdd.push(typeMapping[type])
+              }
+
+              if (scope && scopeMapping[scope]) {
+                labelsToAdd.push(scopeMapping[scope])
+              }
+
+              if (isBreaking) {
+                labelsToAdd.push('BREAKING CHANGE')
+              }
+
+              if (labelsToAdd.length > 0) {
+                const currentLabels = pr.labels.map((l) => l.name)
+                const uniqueLabels = labelsToAdd.filter((l) => !currentLabels.includes(l))
+
+                if (uniqueLabels.length > 0) {
+                  await github.rest.issues.addLabels({
+                    issue_number: pr.number,
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    labels: uniqueLabels
+                  })
+                  console.log(`Added labels: ${uniqueLabels.join(', ')}`)
+                } else {
+                  console.log('No new labels to add.')
+                }
+
+                return
+              }
+            }
+            console.log('No matching type or scope found in PR title.')
