@@ -5,7 +5,7 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 definePageMeta({
   auth: {
     only: 'guest',
-    redirectUserTo: '/'
+    redirectUserTo: '/boards'
   },
   layout: false
 })
