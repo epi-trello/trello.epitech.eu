@@ -47,7 +47,10 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UPage class="h-screen" :ui="{ center: 'flex flex-col' }">
+  <UPage
+    class="h-screen"
+    :ui="{ center: 'flex flex-col' }"
+  >
     <UPageBody class="relative flex items-center flex-1">
       <ULink
         to="/"
@@ -57,7 +60,10 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
         Go back
       </ULink>
       <UContainer class="flex flex-col items-center">
-        <NuxtLink to="/" class="mb-8">
+        <NuxtLink
+          to="/"
+          class="mb-8"
+        >
           <AppLogo class="w-auto" />
         </NuxtLink>
         <h2 class="text-3xl font-semibold mb-6 text-center">
