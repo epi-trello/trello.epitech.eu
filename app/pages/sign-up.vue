@@ -6,7 +6,7 @@ definePageMeta({
   layout: false,
   auth: {
     only: 'guest',
-    redirectUserTo: '/',
+    redirectUserTo: '/boards',
     redirectGuestTo: '/sign-up'
   }
 })
@@ -15,6 +15,7 @@ const { signUp } = useAuth()
 const toast = useToast()
 
 const show = ref(false)
+const showConfirm = ref(false)
 
 const schema = z
   .object({
@@ -56,6 +57,8 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
       description: error.message,
       color: 'error'
     })
+  } else {
+    await navigateTo('/boards')
   }
 }
 </script>
@@ -143,7 +146,7 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
           >
             <UInput
               v-model="state.confirmPassword"
-              :type="show ? 'text' : 'password'"
+              :type="showConfirm ? 'text' : 'password'"
               class="w-full"
             >
               <template #trailing>
@@ -151,11 +154,11 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
                   color="neutral"
                   variant="link"
                   size="sm"
-                  :icon="show ? 'i-ph-eye-closed' : 'i-ph-eye'"
-                  :aria-label="show ? 'Hide password' : 'Show password'"
-                  :aria-pressed="show"
+                  :icon="showConfirm ? 'i-ph-eye-closed' : 'i-ph-eye'"
+                  :aria-label="showConfirm ? 'Hide password' : 'Show password'"
+                  :aria-pressed="showConfirm"
                   aria-controls="password"
-                  @click="show = !show"
+                  @click="showConfirm = !showConfirm"
                 />
               </template>
             </UInput>
