@@ -4,9 +4,19 @@
 :root {
   --ui-radius: 0rem;
 
-  --color-epitech-500: #0033ff;
+  --color-epitech-50: #e8f5ff;
+  --color-epitech-100: #d5edff;
+  --color-epitech-200: #b3dbff;
+  --color-epitech-300: #85c1ff;
+  --color-epitech-400: #5698ff;
+  --color-epitech-500: #2f6eff;
+  --color-epitech-600: #0033ff;
+  --color-epitech-700: #0033ff;
+  --color-epitech-800: #0631cd;
+  --color-epitech-900: #10329f;
+  --color-epitech-950: #0a1c5c;
 }
 
 @theme {
-  --font-sans: 'IBM Plex Sans', sans-serif;
+  --font-sans: 'Outfit', sans-serif;
 }
