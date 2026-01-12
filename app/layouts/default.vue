@@ -10,7 +10,9 @@
 
     <UFooter>
       <template #left>
-        <p class="text-muted text-sm">EpiTrello • © {{ new Date().getFullYear() }}</p>
+        <p class="text-muted text-sm">
+          EpiTrello • © {{ new Date().getFullYear() }}
+        </p>
       </template>
 
       <template #right>
