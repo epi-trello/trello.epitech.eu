@@ -22,7 +22,7 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
   [
     {
       label: 'Themes',
-      type: 'label',
+      type: 'label'
     },
     {
       label: 'System',
@@ -94,7 +94,7 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
         <UDropdownMenu
           :items="dropdownItems"
           :ui="{
-            content: 'w-(--reka-dropdown-menu-trigger-width)',
+            content: 'w-(--reka-dropdown-menu-trigger-width)'
 
           }"
         >
