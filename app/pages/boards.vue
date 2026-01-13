@@ -28,7 +28,6 @@ const createBoardState = reactive<Partial<CreateBoardSchema>>({
   name: undefined
 })
 
-const isCreateModalOpen = ref(false)
 
 async function fetchBoards() {
   try {
@@ -56,7 +55,6 @@ async function createBoard() {
       }
     })
     boards.value.push(newBoard)
-    isCreateModalOpen.value = false
     createBoardState.name = undefined
     toast.add({
       title: 'Succès',
@@ -101,69 +99,40 @@ onMounted(() => {
 
 <template>
   <UContainer class="py-8">
-    <div class="flex items-center justify-between mb-8">
-      <div>
-        <h1 class="text-3xl font-bold mb-2">
-          Mes Tableaux
-        </h1>
-        <p class="text-muted">
-          Gérez vos projets et organisez vos tâches
-        </p>
-      </div>
-      <UButton
-        icon="i-ph-plus"
-        size="lg"
-        @click="isCreateModalOpen = true"
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold mb-2">
+        Mes Tableaux
+      </h1>
+      <p class="text-muted mb-6">
+        Gérez vos projets et organisez vos tâches
+      </p>
+      
+      <UForm
+        :schema="createBoardSchema"
+        :state="createBoardState"
+        class="flex gap-3 max-w-md"
+        @submit.prevent="createBoard"
       >
-        Créer un tableau
-      </UButton>
-    </div>
-
-    <UModal v-model="isCreateModalOpen">
-      <UCard class="sm:max-w-md">
-        <template #header>
-          <h3 class="text-lg font-semibold">
-            Créer un nouveau tableau
-          </h3>
-        </template>
-
-        <UForm
-          :schema="createBoardSchema"
-          :state="createBoardState"
-          class="space-y-4"
-          @submit.prevent="createBoard"
+        <UFormField
+          name="name"
+          class="flex-1"
         >
-          <UFormField
-            label="Nom du tableau"
-            name="name"
-            required
-          >
-            <UInput
-              v-model="createBoardState.name"
-              placeholder="Ex: Projet Minishell"
-              size="lg"
-              autofocus
-            />
-          </UFormField>
-
-          <div class="flex justify-end gap-3 pt-4">
-            <UButton
-              color="neutral"
-              variant="ghost"
-              @click="isCreateModalOpen = false"
-            >
-              Annuler
-            </UButton>
-            <UButton
-              type="submit"
-              :loading="creating"
-            >
-              Créer
-            </UButton>
-          </div>
-        </UForm>
-      </UCard>
-    </UModal>
+          <UInput
+            v-model="createBoardState.name"
+            placeholder="Nom du tableau (ex: Projet Minishell)"
+            size="lg"
+          />
+        </UFormField>
+        <UButton
+          type="submit"
+          icon="i-ph-plus"
+          size="lg"
+          :loading="creating"
+        >
+          Créer
+        </UButton>
+      </UForm>
+    </div>
 
     <div v-if="loading" class="flex justify-center items-center py-12">
       <UIcon
@@ -186,12 +155,6 @@ onMounted(() => {
       <p class="text-muted mb-6">
         Créez votre premier tableau pour commencer à organiser vos projets
       </p>
-      <UButton
-        icon="i-ph-plus"
-        @click="isCreateModalOpen = true"
-      >
-        Créer un tableau
-      </UButton>
     </div>
 
     <div
@@ -201,8 +164,7 @@ onMounted(() => {
       <UCard
         v-for="board in boards"
         :key="board.id"
-        class="hover:shadow-lg transition-shadow cursor-pointer group"
-        @click="navigateTo(`/boards/${board.id}`)"
+        class="hover:shadow-lg transition-shadow group"
       >
         <div class="flex items-start justify-between">
           <div class="flex-1 min-w-0">
