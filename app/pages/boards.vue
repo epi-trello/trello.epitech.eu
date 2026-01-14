@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { z } from 'zod'
+import type { FormSubmitEvent } from '@nuxt/ui'
 
 definePageMeta({
   auth: {}
@@ -45,13 +46,13 @@ async function fetchBoards() {
   }
 }
 
-async function createBoard() {
+async function createBoard({ data }: FormSubmitEvent<CreateBoardSchema>) {
   try {
     creating.value = true
     const newBoard = await $fetch<Board>('/api/boards', {
       method: 'POST',
       body: {
-        name: createBoardState.name
+        name: data.name
       }
     })
     boards.value.push(newBoard)
@@ -92,6 +93,24 @@ async function deleteBoard(boardId: string) {
   }
 }
 
+function showBoardDetails(boardId: string) {
+  // TODO: Implémenter l'affichage des détails du tableau
+  toast.add({
+    title: 'Détails',
+    description: 'Affichage des détails du tableau',
+    color: 'info'
+  })
+}
+
+function editBoard(boardId: string) {
+  // TODO: Implémenter la modification du tableau
+  toast.add({
+    title: 'Modifier',
+    description: 'Modification du tableau',
+    color: 'info'
+  })
+}
+
 onMounted(() => {
   fetchBoards()
 })
@@ -110,27 +129,32 @@ onMounted(() => {
       <UForm
         :schema="createBoardSchema"
         :state="createBoardState"
-        class="flex gap-3 max-w-md"
+        class="flex gap-3 max-w-md items-start"
         @submit.prevent="createBoard"
       >
-        <UFormField
-          name="name"
-          class="flex-1"
-        >
-          <UInput
-            v-model="createBoardState.name"
-            placeholder="Nom du tableau (ex: Projet Minishell)"
+        <div class="flex-1">
+          <UFormField
+            label="Nom du tableau"
+            name="name"
+            required
+          >
+            <UInput
+              v-model="createBoardState.name"
+              placeholder="Nom du tableau (ex: Projet Minishell)"
+              size="lg"
+            />
+          </UFormField>
+        </div>
+        <div class="flex-shrink-0">
+          <UButton
+            type="submit"
+            icon="i-ph-plus"
             size="lg"
-          />
-        </UFormField>
-        <UButton
-          type="submit"
-          icon="i-ph-plus"
-          size="lg"
-          :loading="creating"
-        >
-          Créer
-        </UButton>
+            :loading="creating"
+          >
+            Créer
+          </UButton>
+        </div>
       </UForm>
     </div>
 
@@ -175,13 +199,18 @@ onMounted(() => {
               Créé le {{ new Date(board.createdAt).toLocaleDateString('fr-FR') }}
             </p>
           </div>
-          <UDropdown
+          <UDropdownMenu
             :items="[
               [
                 {
-                  label: 'Ouvrir',
-                  icon: 'i-ph-arrow-right',
-                  click: () => navigateTo(`/boards/${board.id}`)
+                  label: 'Détails',
+                  icon: 'i-ph-info',
+                  click: () => showBoardDetails(board.id)
+                },
+                {
+                  label: 'Modifier',
+                  icon: 'i-ph-pencil',
+                  click: () => editBoard(board.id)
                 },
                 {
                   label: 'Supprimer',
@@ -191,17 +220,16 @@ onMounted(() => {
                 }
               ]
             ]"
-            :popper="{ placement: 'bottom-end' }"
+            :popper="{ placement: 'bottom-end', offset: [-20, 8] }"
           >
             <UButton
               color="neutral"
               variant="ghost"
               icon="i-ph-dots-three"
               size="sm"
-              class="opacity-0 group-hover:opacity-100 transition-opacity"
-              @click.stop
+              class="opacity-40 group-hover:opacity-100 transition-opacity"
             />
-          </UDropdown>
+          </UDropdownMenu>
         </div>
       </UCard>
     </div>
