@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { NavigationMenuItem, DropdownMenuItem } from '@nuxt/ui'
 
-const { signOut } = useAuth()
+const { user, signOut } = useAuth()
 const colorMode = useColorMode()
 const title = usePageTitle()
 
@@ -26,7 +26,7 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
     },
     {
       label: 'System',
-      icon: 'i-ph-desktop',
+      icon: 'i-ph-monitor',
       type: 'checkbox',
       checked: colorMode.preference === 'system',
       onUpdateChecked(checked: boolean) {
@@ -94,15 +94,15 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
         <UDropdownMenu
           :items="dropdownItems"
           :ui="{
-            content: 'w-(--reka-dropdown-menu-trigger-width)'
-
+            content: 'w-(--reka-dropdown-menu-trigger-width)',
+            label: 'font-medium'
           }"
         >
           <UButton
             :avatar="{
-              src: 'https://github.com/davidabou.png'
+              icon: 'i-ph-user'
             }"
-            label="David Abou"
+            :label="user?.name"
             trailing-icon="i-ph-caret-up-down"
             color="neutral"
             variant="ghost"
@@ -113,7 +113,19 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
       </template>
     </UDashboardSidebar>
     <div class="flex-1">
-      <UDashboardNavbar :title="title" />
+      <UDashboardNavbar>
+        <template #title>
+          <ClientOnly>
+            <h1 class="flex items-center gap-1.5 font-semibold text-highlighted truncate">
+              {{ title }}
+            </h1>
+
+            <template #fallback>
+              <USkeleton class="h-4 w-30" />
+            </template>
+          </ClientOnly>
+        </template>
+      </UDashboardNavbar>
       <slot />
     </div>
   </div>
