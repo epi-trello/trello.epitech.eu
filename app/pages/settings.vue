@@ -33,7 +33,7 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
   const { error } = await client.updateUser({
     firstname: data.firstname,
     lastname: data.lastname,
-    name: `${data.firstname} ${data.lastname}`,
+    name: `${data.firstname} ${data.lastname}`
   })
 
   if (error) {
@@ -55,7 +55,11 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
       Account
     </h2>
     <UCard :ui="{ body: 'p-0 sm:p-0' }">
-      <UForm :schema="schema" :state="state" @submit.prevent="onSubmit">
+      <UForm
+        :schema="schema"
+        :state="state"
+        @submit.prevent="onSubmit"
+      >
         <div class="flex">
           <div class="flex-1">
             <UFormField
@@ -83,11 +87,11 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
               class="px-6 py-4"
             >
               <UFileUpload
+                v-model="state.avatar"
                 variant="button"
                 icon="ph:user"
                 accept="image/jpeg,image/png,image/webp"
                 class="size-28"
-                v-model="state.avatar"
               />
             </UFormField>
           </div>
