@@ -100,7 +100,8 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
         >
           <UButton
             :avatar="{
-              icon: 'i-ph-user'
+              src: user?.image,
+              icon: user?.image ? undefined : 'i-ph-user'
             }"
             :label="user?.name"
             trailing-icon="i-ph-caret-up-down"
