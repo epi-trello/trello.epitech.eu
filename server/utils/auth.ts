@@ -10,7 +10,6 @@ export const prisma = new PrismaClient({ adapter })
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: 'postgresql' }),
-  baseURL: getBaseURL(),
   emailAndPassword: { enabled: true },
   user: {
     additionalFields: {
@@ -20,11 +19,3 @@ export const auth = betterAuth({
     deleteUser: { enabled: true }
   }
 })
-
-function getBaseURL() {
-  let baseURL = process.env.BETTER_AUTH_URL
-
-  baseURL ??= getRequestURL(useEvent()).origin
-
-  return baseURL
-}
