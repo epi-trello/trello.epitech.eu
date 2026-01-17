@@ -1,0 +1,14 @@
+name: '🐞 Bug Report'
+description: Create a report to help improve EpiTrello
+labels: ['pending triage']
+projects: ['epi-trello/1']
+type: bug
+body:
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+      placeholder: Bug description
+    validations:
+      required: true
