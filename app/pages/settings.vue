@@ -12,10 +12,18 @@ const title = usePageTitle()
 
 title.value = 'Settings'
 
+const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+
 const schema = z.object({
   avatar: z
     .instanceof(File, { error: 'Please select a file' })
-    .refine(file => file.size <= 2 * 1024 * 1024, { error: 'File size must be less than 2MB' })
+    .refine(file => file.size <= MAX_FILE_SIZE, {
+      error: 'File size must be less than 2MB'
+    })
+    .refine(file => ACCEPTED_IMAGE_TYPES.includes(file.type), {
+      error: 'Please upload a valid image file (JPEG, PNG, or WebP).'
+    })
     .optional(),
   firstname: z.string('First name is required').min(3, 'Must be at least 3 characters'),
   lastname: z.string('Last name is required').min(3, 'Must be at least 3 characters')
@@ -30,22 +38,50 @@ const state = reactive<Partial<Schema>>({
 })
 
 async function onSubmit({ data }: FormSubmitEvent<Schema>) {
-  const { error } = await client.updateUser({
-    firstname: data.firstname,
-    lastname: data.lastname,
-    name: `${data.firstname} ${data.lastname}`
-  })
+  try {
+    let imageUrl = user.value?.image
 
-  if (error) {
+    if (state.avatar) {
+      const form = new FormData()
+
+      form.set('image', state.avatar as File)
+      const { url } = await $fetch('/api/upload', {
+        method: 'POST',
+        body: form
+      })
+
+      imageUrl = url
+    }
+
+    const { error } = await client.updateUser({
+      firstname: data.firstname,
+      lastname: data.lastname,
+      name: `${data.firstname} ${data.lastname}`,
+      image: imageUrl
+    })
+
+    if (error) throw error
+
     add({
-      title: 'Update Error',
-      description: error.message,
+      title: 'Profile Updated',
+      description: 'Your changes have been saved successfully.',
+      color: 'success'
+    })
+
+    await fetchSession()
+
+    state.avatar = undefined
+  } catch (error: any) {
+    add({
+      title: 'Update Failed',
+      description: error.message || 'Something went wrong',
       color: 'error'
     })
-    return
   }
+}
 
-  await fetchSession()
+function createObjectUrl(file: File) {
+  return URL.createObjectURL(file)
 }
 </script>
 
@@ -88,11 +124,18 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
             >
               <UFileUpload
                 v-model="state.avatar"
+                v-slot="{ open }"
                 variant="button"
                 icon="ph:user"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/*"
                 class="size-28"
-              />
+              >
+                <UAvatar
+                  :src="state.avatar ? createObjectUrl(state.avatar) : user?.image || undefined"
+                  @click="open"
+                  class="size-full"
+                />
+              </UFileUpload>
             </UFormField>
           </div>
         </div>
@@ -102,7 +145,7 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
             label="Save Changes"
             size="xs"
             loading-auto
-            :disabled="user?.firstname === state.firstname && user?.lastname === state.lastname"
+            :disabled="user?.firstname === state.firstname && user?.lastname === state.lastname && !state.avatar"
           />
         </div>
       </UForm>
