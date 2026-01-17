@@ -79,10 +79,6 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
     })
   }
 }
-
-function createObjectUrl(file: File) {
-  return URL.createObjectURL(file)
-}
 </script>
 
 <template>
@@ -131,7 +127,9 @@ function createObjectUrl(file: File) {
                 class="size-28"
               >
                 <UAvatar
-                  :src="state.avatar ? createObjectUrl(state.avatar) : user?.image || undefined"
+                  :src="state.avatar
+                  ? createObjectUrl(state.avatar)
+                  : (user?.image ? getCacheBustedUrl(user.image) : undefined)"
                   @click="open"
                   class="size-full"
                 />
