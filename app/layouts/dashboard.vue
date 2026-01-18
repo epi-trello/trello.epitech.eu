@@ -91,14 +91,14 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
       />
 
       <template #footer>
-        <UDropdownMenu
-          :items="dropdownItems"
-          :ui="{
-            content: 'w-(--reka-dropdown-menu-trigger-width)',
-            label: 'font-medium'
-          }"
-        >
-          <ClientOnly>
+        <ClientOnly>
+          <UDropdownMenu
+            :items="dropdownItems"
+            :ui="{
+              content: 'w-(--reka-dropdown-menu-trigger-width)',
+              label: 'font-medium'
+            }"
+          >
             <UButton
               :avatar="{
                 src: user?.image ? getCacheBustedUrl(user.image) : undefined,
@@ -111,8 +111,16 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
               block
               class="w-full"
             />
+          </UDropdownMenu>
 
-            <template #fallback>
+          <template #fallback>
+            <UDropdownMenu
+              :items="dropdownItems"
+              :ui="{
+                content: 'w-(--reka-dropdown-menu-trigger-width)',
+                label: 'font-medium'
+              }"
+            >
               <UButton
                 :avatar="{}"
                 :label="user?.name"
@@ -122,9 +130,9 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
                 block
                 class="w-full"
               />
-            </template>
-          </ClientOnly>
-        </UDropdownMenu>
+            </UDropdownMenu>
+          </template>
+        </ClientOnly>
       </template>
     </UDashboardSidebar>
     <div class="flex-1">
