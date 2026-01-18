@@ -126,13 +126,19 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
                 accept="image/*"
                 class="size-28"
               >
-                <UAvatar
-                  :src="state.avatar
-                  ? createObjectUrl(state.avatar)
-                  : (user?.image ? getCacheBustedUrl(user.image) : undefined)"
-                  @click="open"
-                  class="size-full"
-                />
+                <ClientOnly>
+                  <UAvatar
+                    :src="state.avatar
+                    ? createObjectUrl(state.avatar)
+                    : (user?.image ? getCacheBustedUrl(user.image) : undefined)"
+                    @click="open"
+                    class="size-full"
+                  />
+
+                  <template #fallback>
+                    <USkeleton class="size-full rounded-full" />
+                  </template>
+                </ClientOnly>
               </UFileUpload>
             </UFormField>
           </div>
