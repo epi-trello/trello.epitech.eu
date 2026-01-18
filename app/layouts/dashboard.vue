@@ -98,18 +98,32 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
             label: 'font-medium'
           }"
         >
-          <UButton
-            :avatar="{
-              src: user?.image ? getCacheBustedUrl(user.image) : undefined,
-              icon: 'i-ph-user'
-            }"
-            :label="user?.name"
-            trailing-icon="i-ph-caret-up-down"
-            color="neutral"
-            variant="ghost"
-            block
-            class="w-full"
-          />
+          <ClientOnly>
+            <UButton
+              :avatar="{
+                src: user?.image ? getCacheBustedUrl(user.image) : undefined,
+                icon: 'i-ph-user'
+              }"
+              :label="user?.name"
+              trailing-icon="i-ph-caret-up-down"
+              color="neutral"
+              variant="ghost"
+              block
+              class="w-full"
+            />
+
+            <template #fallback>
+              <UButton
+                :avatar="{}"
+                :label="user?.name"
+                trailing-icon="i-ph-caret-up-down"
+                color="neutral"
+                variant="ghost"
+                block
+                class="w-full"
+              />
+            </template>
+          </ClientOnly>
         </UDropdownMenu>
       </template>
     </UDashboardSidebar>
