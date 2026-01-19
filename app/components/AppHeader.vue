@@ -61,20 +61,16 @@ const items = computed(() => {
               to: item.to,
               icon: item.to === '/boards' ? 'i-ph-cards-three' : 'i-ph-star'
             })),
-            {
-              type: 'divider'
-            },
-            user
-              ? {
-                  label: 'Tableaux',
-                  to: '/boards',
-                  icon: 'i-ph-cards-three'
-                }
-              : {
-                  label: 'Se connecter',
-                  to: '/login',
-                  icon: 'i-ph-sign-in'
-                }
+            ...(user ? [] : [
+              {
+                type: 'divider'
+              },
+              {
+                label: 'Se connecter',
+                to: '/login',
+                icon: 'i-ph-sign-in'
+              }
+            ])
           ]
         ]"
         :popper="{ placement: 'bottom-end' }"
