@@ -22,7 +22,7 @@ const items = computed(() => {
 </script>
 
 <template>
-  <UHeader>
+  <UHeader :toggle="false">
     <template #left>
       <NuxtLink to="/">
         <AppLogo class="w-auto shrink-0" />
@@ -52,6 +52,41 @@ const items = computed(() => {
       />
 
       <UColorModeButton />
+
+      <UDropdownMenu
+        :items="[
+          [
+            ...items.map(item => ({
+              label: item.label,
+              to: item.to,
+              icon: item.to === '/boards' ? 'i-ph-cards-three' : 'i-ph-star'
+            })),
+            {
+              type: 'divider'
+            },
+            user
+              ? {
+                  label: 'Tableaux',
+                  to: '/boards',
+                  icon: 'i-ph-cards-three'
+                }
+              : {
+                  label: 'Se connecter',
+                  to: '/login',
+                  icon: 'i-ph-sign-in'
+                }
+          ]
+        ]"
+        :popper="{ placement: 'bottom-end' }"
+        class="lg:hidden"
+      >
+        <UButton
+          icon="i-ph-list"
+          color="neutral"
+          variant="ghost"
+          class="lg:hidden"
+        />
+      </UDropdownMenu>
     </template>
   </UHeader>
 </template>

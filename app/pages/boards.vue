@@ -160,28 +160,11 @@ onMounted(() => {
       </UForm>
     </div>
 
-    <div
-      v-if="loading"
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
-    >
-      <UCard
-        v-for="i in 8"
-        :key="i"
-        class="animate-pulse"
-      >
-        <div class="p-5">
-          <div class="flex items-start justify-between mb-3">
-            <div class="flex-1 min-w-0 pr-2">
-              <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded mb-2 w-3/4" />
-              <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
-            </div>
-            <div class="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded" />
-          </div>
-          <div class="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
-            <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-16" />
-          </div>
-        </div>
-      </UCard>
+    <div v-if="loading" class="flex justify-center items-center py-12">
+      <UIcon
+        name="i-ph-circle-notch"
+        class="w-8 h-8 animate-spin text-primary"
+      />
     </div>
 
     <div
