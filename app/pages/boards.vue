@@ -3,10 +3,13 @@ import { z } from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 
 definePageMeta({
-  auth: {}
+  layout: 'dashboard'
 })
 
 const toast = useToast()
+const title = usePageTitle()
+
+title.value = 'Boards'
 
 interface Board {
   id: string
@@ -119,6 +122,13 @@ onMounted(() => {
 </script>
 
 <template>
+  <Teleport to="#navbar-actions">
+    <UButton
+      icon="i-ph-plus"
+      label="Create"
+    />
+  </Teleport>
+
   <UContainer class="py-8">
     <div class="mb-8">
       <h1 class="text-3xl font-bold mb-2">
@@ -127,7 +137,7 @@ onMounted(() => {
       <p class="text-muted mb-6">
         Gérez vos projets et organisez vos tâches
       </p>
-      
+
       <UForm
         :schema="createBoardSchema"
         :state="createBoardState"
@@ -194,7 +204,7 @@ onMounted(() => {
         @click="navigateTo(`/boards/${board.id}`)"
       >
         <div class="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        
+
         <div class="relative p-5">
           <div class="flex items-start justify-between mb-3">
             <div class="flex-1 min-w-0 pr-2">
@@ -238,7 +248,7 @@ onMounted(() => {
               />
             </UDropdownMenu>
           </div>
-          
+
           <div class="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
             <UButton
               variant="ghost"

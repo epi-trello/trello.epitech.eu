@@ -148,6 +148,10 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
             </template>
           </ClientOnly>
         </template>
+
+        <template #right>
+          <div id="navbar-actions" />
+        </template>
       </UDashboardNavbar>
       <slot />
     </div>
