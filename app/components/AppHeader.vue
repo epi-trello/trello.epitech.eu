@@ -1,24 +1,10 @@
 <script setup lang="ts">
 const { user } = useAuth()
 
-const items = computed(() => {
-  const baseItems = [{
-    label: 'Features',
-    to: '#features'
-  }]
-
-  if (user.value) {
-    return [
-      {
-        label: 'Tableaux',
-        to: '/boards'
-      },
-      ...baseItems
-    ]
-  }
-
-  return baseItems
-})
+const items = computed(() => [{
+  label: 'Features',
+  to: '#features'
+}])
 </script>
 
 <template>

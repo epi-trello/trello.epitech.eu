@@ -82,7 +82,12 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
   <div class="flex">
     <UDashboardSidebar class="w-64">
       <template #header>
-        <AppLogo class="h-5 w-auto shrink-0" />
+        <NuxtLink
+          to="/"
+          class="inline-flex"
+        >
+          <AppLogo class="h-5 w-auto shrink-0" />
+        </NuxtLink>
       </template>
 
       <UNavigationMenu
