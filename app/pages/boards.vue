@@ -96,12 +96,7 @@ async function deleteBoard(boardId: string) {
 }
 
 function showBoardDetails(boardId: string) {
-  // TODO: Implémenter l'affichage des détails du tableau
-  toast.add({
-    title: 'Détails',
-    description: 'Affichage des détails du tableau',
-    color: 'info'
-  })
+  navigateTo(`/board/${boardId}`)
 }
 
 function editBoard(boardId: string) {
@@ -191,7 +186,7 @@ onMounted(() => {
         v-for="board in boards"
         :key="board.id"
         class="group relative overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg border-2 hover:border-primary/50"
-        @click="navigateTo(`/boards/${board.id}`)"
+        @click="() => { navigateTo(`/board/${board.id}`) }"
       >
         <div class="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         
@@ -241,11 +236,12 @@ onMounted(() => {
           
           <div class="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
             <UButton
+              :to="`/board/${board.id}`"
               variant="ghost"
               size="xs"
               icon="i-ph-arrow-right"
               class="text-xs"
-              @click.stop="navigateTo(`/boards/${board.id}`)"
+              @click.stop
             >
               Ouvrir
             </UButton>
