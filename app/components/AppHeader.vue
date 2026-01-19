@@ -4,7 +4,7 @@ const { user } = useAuth()
 const items = computed(() => {
   const baseItems = [{
     label: 'Features',
-    to: '#features'
+    to: '/features'
   }]
 
   if (user.value) {
