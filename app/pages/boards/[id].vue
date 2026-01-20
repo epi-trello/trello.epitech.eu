@@ -96,7 +96,6 @@ async function createCard({ data }: FormSubmitEvent<CardSchema>, listId: string,
         listId
       }
     })
-
     await refresh()
     next?.()
     creatingCardFor.value = null
