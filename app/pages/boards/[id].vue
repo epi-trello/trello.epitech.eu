@@ -39,6 +39,11 @@ const cardState = reactive<Partial<CardSchema>>({
 const creatingListFor = ref<string | null>(null)
 const creatingCardFor = ref<string | null>(null)
 
+// Drag and drop
+const draggedCard = ref<{ id: string, listId: string } | null>(null)
+const dragOverListId = ref<string | null>(null)
+const dragOverCardIndex = ref<number | null>(null)
+
 // Fonction pour créer une liste
 async function createList({ data }: FormSubmitEvent<ListSchema>, next?: () => void) {
   if (!board.value) return
@@ -159,6 +164,119 @@ async function deleteCard(cardId: string) {
       description: error.message || 'Impossible de supprimer la carte'
     })
   }
+}
+
+// Fonction pour déplacer une carte
+async function moveCard(cardId: string, newListId: string, newPosition: number) {
+  if (!board.value) return
+
+  try {
+    await $fetch(`/api/cards/${cardId}`, {
+      method: 'PATCH',
+      body: {
+        listId: newListId,
+        position: newPosition
+      }
+    })
+
+    await refresh()
+  } catch (error: any) {
+    add({
+      color: 'error',
+      title: 'Erreur',
+      description: error.message || 'Impossible de déplacer la carte'
+    })
+  }
+}
+
+// Gestionnaires de drag and drop
+function onDragStart(event: DragEvent, cardId: string, listId: string) {
+  if (!event.dataTransfer) return
+  
+  draggedCard.value = { id: cardId, listId }
+  event.dataTransfer.effectAllowed = 'move'
+  event.dataTransfer.setData('text/plain', cardId)
+  
+  // Style de la carte pendant le drag
+  if (event.target instanceof HTMLElement) {
+    event.target.style.opacity = '0.5'
+  }
+}
+
+function onDragEnd(event: DragEvent) {
+  if (event.target instanceof HTMLElement) {
+    event.target.style.opacity = '1'
+  }
+  
+  draggedCard.value = null
+  dragOverListId.value = null
+  dragOverCardIndex.value = null
+}
+
+function onDragOver(event: DragEvent, listId: string, cardIndex?: number) {
+  event.preventDefault()
+  if (!event.dataTransfer) return
+  
+  event.dataTransfer.dropEffect = 'move'
+  dragOverListId.value = listId
+  dragOverCardIndex.value = cardIndex ?? null
+}
+
+function onDragLeave() {
+  dragOverListId.value = null
+  dragOverCardIndex.value = null
+}
+
+async function onDrop(event: DragEvent, targetListId: string, targetCardIndex?: number) {
+  event.preventDefault()
+  
+  if (!draggedCard.value || !board.value) return
+  
+  const { id: cardId, listId: sourceListId } = draggedCard.value
+  
+  // Si la carte est déposée dans la même liste, on réorganise les positions
+  if (sourceListId === targetListId) {
+    const targetList = board.value.lists.find(l => l.id === targetListId)
+    if (!targetList) return
+    
+    const cards = [...targetList.cards]
+    const draggedCardIndex = cards.findIndex(c => c.id === cardId)
+    
+    if (draggedCardIndex === -1) return
+    
+    // Retirer la carte de sa position actuelle
+    const removedCard = cards[draggedCardIndex]
+    if (!removedCard) return
+    
+    cards.splice(draggedCardIndex, 1)
+    
+    // Calculer la nouvelle position d'insertion
+    let insertIndex: number
+    if (targetCardIndex !== undefined) {
+      // Si on insère avant une carte existante
+      insertIndex = targetCardIndex > draggedCardIndex ? targetCardIndex - 1 : targetCardIndex
+    } else {
+      // Si on insère à la fin
+      insertIndex = cards.length
+    }
+    
+    cards.splice(insertIndex, 0, removedCard)
+    
+    // Mettre à jour la position de la carte
+    await moveCard(cardId, targetListId, insertIndex)
+  } else {
+    // La carte est déplacée vers une autre liste
+    const targetList = board.value.lists.find(l => l.id === targetListId)
+    if (!targetList) return
+    
+    // Calculer la position dans la nouvelle liste
+    const insertIndex = targetCardIndex !== undefined ? targetCardIndex : targetList.cards.length
+    await moveCard(cardId, targetListId, insertIndex)
+  }
+  
+  draggedCard.value = null
+  dragOverListId.value = null
+  dragOverCardIndex.value = null
 }
 
 // Mapping des couleurs avec gradients modernes
@@ -290,45 +408,71 @@ const colorMap: Record<string, { bg: string, text: string, border: string }> = {
             </div>
 
             <!-- Cartes avec design amélioré -->
-            <div class="flex-1 overflow-y-auto p-3 space-y-3  max-h-[calc(100vh-250px)] scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent">
-              <UCard
-                v-for="card in list.cards"
-                :key="card.id"
-                class="bg-white dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group/card"
-                :ui="{ body: 'p-4', header: 'p-0', footer: 'p-0' }"
-              >
-                <div class="flex items-start justify-between gap-3">
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1.5 leading-snug">
-                      {{ card.title }}
-                    </p>
-                    <p
-                      v-if="card.description"
-                      class="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed"
-                    >
-                      {{ card.description }}
-                    </p>
-                  </div>
-                  <UButton
-                    variant="ghost"
-                    color="neutral"
-                    icon="i-ph-trash"
-                    size="xs"
-                    class="opacity-0 group-hover/card:opacity-100 transition-opacity flex-shrink-0 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400"
-                    @click.stop="deleteCard(card.id)"
-                  />
-                </div>
-                <div
-                  v-if="card.dueDate"
-                  class="mt-3 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center gap-1.5"
+            <div
+              class="flex-1 overflow-y-auto p-3 space-y-3 max-h-[calc(100vh-250px)] scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent"
+              :class="{ 'bg-blue-50/30 dark:bg-blue-900/10': dragOverListId === list.id && !dragOverCardIndex }"
+              @dragover.prevent="onDragOver($event, list.id)"
+              @dragleave="onDragLeave"
+              @drop.prevent="onDrop($event, list.id)"
+            >
+              <!-- Zone de drop avant la première carte -->
+              <div
+                v-if="dragOverListId === list.id && dragOverCardIndex === 0"
+                class="h-2 rounded-lg bg-blue-400 dark:bg-blue-500 mb-2 transition-all"
+              />
+              
+              <template v-for="(card, cardIndex) in list.cards" :key="card.id">
+                <UCard
+                  :draggable="true"
+                  class="bg-white dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 hover:-translate-y-0.5 transition-all duration-200 cursor-grab active:cursor-grabbing group/card"
+                  :class="{
+                    'opacity-50': draggedCard?.id === card.id,
+                    'border-blue-400 dark:border-blue-500': dragOverListId === list.id && dragOverCardIndex === cardIndex + 1
+                  }"
+                  :ui="{ body: 'p-4', header: 'p-0', footer: 'p-0' }"
+                  @dragstart="onDragStart($event, card.id, list.id)"
+                  @dragend="onDragEnd"
+                  @dragover.prevent="onDragOver($event, list.id, cardIndex + 1)"
                 >
-                  <UIcon name="i-ph-calendar" class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                  <span class="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                    {{ new Date(card.dueDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) }}
-                  </span>
-                </div>
-              </UCard>
-
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1.5 leading-snug">
+                        {{ card.title }}
+                      </p>
+                      <p
+                        v-if="card.description"
+                        class="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed"
+                      >
+                        {{ card.description }}
+                      </p>
+                    </div>
+                    <UButton
+                      variant="ghost"
+                      color="neutral"
+                      icon="i-ph-trash"
+                      size="xs"
+                      class="opacity-0 group-hover/card:opacity-100 transition-opacity flex-shrink-0 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400"
+                      @click.stop="deleteCard(card.id)"
+                    />
+                  </div>
+                  <div
+                    v-if="card.dueDate"
+                    class="mt-3 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center gap-1.5"
+                  >
+                    <UIcon name="i-ph-calendar" class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                    <span class="text-xs text-slate-600 dark:text-slate-400 font-medium">
+                      {{ new Date(card.dueDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) }}
+                    </span>
+                  </div>
+                </UCard>
+                
+                <!-- Zone de drop après chaque carte -->
+                <div
+                  v-if="dragOverListId === list.id && dragOverCardIndex === cardIndex + 1"
+                  class="h-2 rounded-lg bg-blue-400 dark:bg-blue-500 mt-2 transition-all"
+                />
+              </template>
+              
               <!-- Formulaire d'ajout de carte amélioré -->
               <UCard
                 v-if="creatingCardFor === list.id"
@@ -369,6 +513,12 @@ const colorMap: Record<string, { bg: string, text: string, border: string }> = {
                 </UForm>
               </UCard>
             </div>
+            
+            <!-- Zone de drop en bas de la liste (si liste vide ou drop à la fin) -->
+            <div
+              v-if="dragOverListId === list.id && dragOverCardIndex === null && list.cards.length === 0"
+              class="h-2 mx-3 rounded-lg bg-blue-400 dark:bg-blue-500 transition-all"
+            />
 
             <!-- Bouton pour ajouter une carte amélioré -->
             <div v-if="creatingCardFor !== list.id" class="p-3 border-t border-slate-200/60 dark:border-slate-700/60">
