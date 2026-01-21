@@ -79,8 +79,8 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
 </script>
 
 <template>
-  <div class="flex">
-    <UDashboardSidebar class="w-64">
+  <div class="flex h-screen overflow-hidden">
+    <UDashboardSidebar class="w-64 flex-shrink-0">
       <template #header>
         <NuxtLink
           to="/"
@@ -140,8 +140,8 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
         </ClientOnly>
       </template>
     </UDashboardSidebar>
-    <div class="flex-1">
-      <UDashboardNavbar>
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <UDashboardNavbar class="flex-shrink-0">
         <template #title>
           <ClientOnly>
             <h1 class="flex items-center gap-1.5 font-semibold text-highlighted truncate">
@@ -158,7 +158,9 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
           <div id="navbar-actions" />
         </template>
       </UDashboardNavbar>
-      <slot />
+      <div class="flex-1 min-h-0 overflow-hidden">
+        <slot />
+      </div>
     </div>
   </div>
 </template>
