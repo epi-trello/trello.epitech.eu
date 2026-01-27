@@ -153,11 +153,11 @@ async function deleteBoard(boardId: string, next?: () => void) {
       </div>
 
       <h2 class="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent mb-4">
-        Créez votre premier tableau
+        Create your first board
       </h2>
       <p class="text-lg text-slate-600 dark:text-slate-400 max-w-md mb-8 leading-relaxed">
-        Organisez vos projets, suivez vos tâches et collaborez efficacement avec votre équipe. 
-        Commencez par créer votre premier tableau Kanban.
+        Organize your projects, track your tasks and collaborate effectively with your team. 
+        Start by creating your first Kanban board.
       </p>
 
       <!-- Bouton CTA principal -->
@@ -165,7 +165,7 @@ async function deleteBoard(boardId: string, next?: () => void) {
         <UButton
           size="lg"
           icon="i-ph-plus-circle"
-          label="Créer mon premier tableau"
+          label="Create my first board"
           class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/50 hover:shadow-xl hover:shadow-blue-500/50 transition-all duration-300"
         />
 
@@ -201,7 +201,7 @@ async function deleteBoard(boardId: string, next?: () => void) {
       <!-- Suggestions de tableaux -->
       <div class="mt-12 w-full max-w-2xl">
         <p class="text-sm text-slate-500 dark:text-slate-400 mb-4 font-medium">
-          Suggestions de tableaux populaires :
+          Popular board suggestions:
         </p>
         <div class="flex flex-wrap gap-3 justify-center">
           <UButton
