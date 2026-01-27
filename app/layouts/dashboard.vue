@@ -158,7 +158,7 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
           <div id="navbar-actions" />
         </template>
       </UDashboardNavbar>
-      <div class="flex-1 min-h-0 overflow-hidden">
+      <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
         <slot />
       </div>
     </div>
