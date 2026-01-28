@@ -8,6 +8,16 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  // Désactiver SSR pour éviter "Cannot read properties of null (reading 'ce')" (reka-ui / Nuxt UI en SSR)
+  routeRules: {
+    '/': { ssr: false },
+    '/boards': { ssr: false },
+    '/boards/**': { ssr: false },
+    '/login': { ssr: false },
+    '/sign-up': { ssr: false },
+    '/settings': { ssr: false }
+  },
+
   compatibilityDate: '2025-01-15',
 
   eslint: {
