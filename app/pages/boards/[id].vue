@@ -400,7 +400,7 @@ const colorMap: Record<string, { bg: string, text: string, border: string }> = {
             </div>
 
             <!-- Cartes : conteneur pour Sortable.js (data-list-id pour querySelector + onEnd) -->
-            <div class="flex-1 overflow-y-auto p-3 min-h-0 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent flex flex-col">
+            <div class="flex-1 overflow-y-auto p-3 min-h-0 flex flex-col [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <div
                 :data-list-id="list.id"
                 class="space-y-3 flex-1 min-h-[60px]"
