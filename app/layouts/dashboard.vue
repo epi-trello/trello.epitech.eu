@@ -140,9 +140,11 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
         </ClientOnly>
       </template>
     </UDashboardSidebar>
-    <div class="flex-1">
-      <UDashboardNavbar>
-        <template #title>
+    <div class="flex flex-col flex-1 min-w-0">
+      <UDashboardNavbar :ui="{ left: 'gap-0' }">
+        <template #left>
+          <div id="navbar-left" />
+
           <ClientOnly>
             <h1 class="flex items-center gap-1.5 font-semibold text-highlighted truncate">
               {{ title }}
@@ -155,7 +157,7 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
         </template>
 
         <template #right>
-          <div id="navbar-actions" />
+          <div id="navbar-right" />
         </template>
       </UDashboardNavbar>
       <slot />

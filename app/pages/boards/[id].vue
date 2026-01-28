@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  // @ts-ignore
+import { Container, Draggable } from 'vue3-smooth-dnd'
 import { z } from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 
@@ -10,37 +12,30 @@ const { params } = useRoute()
 const title = usePageTitle()
 const { add } = useToast()
 
-const { data: board, refresh } = await useFetch(`/api/boards/${params.id}`)
+const { data: _board, refresh } = await useFetch(`/api/boards/${params.id}`)
+const board = ref(_board.value)
+
+watch(_board, (newBoard) => {
+  if (newBoard) {
+    board.value = newBoard
+  }
+})
 
 title.value = board.value ? board.value.name : 'Unknown'
 
-// Schema pour créer une liste
-const listSchema = z.object({
-  title: z.string().min(1, { message: 'Le titre est requis' }).max(255)
+const schema = z.object({
+  title: z.string('Title is required').min(1, 'Title is required'),
+  color: z.enum(['GRAY', 'RED', 'YELLOW', 'GREEN', 'SKY', 'BLUE', 'VIOLET', 'PINK'])
 })
 
-type ListSchema = z.output<typeof listSchema>
+type Schema = z.output<typeof schema>
 
-const listState = reactive<Partial<ListSchema>>({
-  title: undefined
+const state = reactive<Partial<Schema>>({
+  title: undefined,
+  color: 'GRAY'
 })
 
-// Schema pour créer une carte
-const cardSchema = z.object({
-  title: z.string().min(1, { message: 'Le titre est requis' }).max(255)
-})
-
-type CardSchema = z.output<typeof cardSchema>
-
-const cardState = reactive<Partial<CardSchema>>({
-  title: undefined
-})
-
-const creatingListFor = ref<string | null>(null)
-const creatingCardFor = ref<string | null>(null)
-
-// Fonction pour créer une liste
-async function createList({ data }: FormSubmitEvent<ListSchema>, next?: () => void) {
+async function createList({ data }: FormSubmitEvent<Schema>, next?: () => void) {
   if (!board.value) return
 
   try {
@@ -53,302 +48,276 @@ async function createList({ data }: FormSubmitEvent<ListSchema>, next?: () => vo
       body: {
         title: data.title,
         position: maxPosition,
-        color: 'GRAY'
+        color: data.color
       }
     })
 
-    await refresh()
+    await refreshNuxtData()
     next?.()
-    creatingListFor.value = null
-    listState.title = undefined
+    state.title = undefined
 
     add({
-      title: 'Liste créée',
-      description: 'La nouvelle liste a été créée avec succès.',
+      title: 'List created',
+      description: 'The new list has been successfully created.',
       color: 'success'
     })
   } catch (error: any) {
     add({
       color: 'error',
-      title: 'Erreur',
-      description: error.message || 'Impossible de créer la liste'
+      title: 'Error',
+      description: error.message || 'Unable to create the list'
     })
   }
 }
 
-// Fonction pour créer une carte
-async function createCard({ data }: FormSubmitEvent<CardSchema>, listId: string, next?: () => void) {
-  if (!board.value) return
+function applyDrag(arr: any[], dragResult: any) {
+  const { removedIndex, addedIndex, payload } = dragResult
 
-  try {
-    const list = board.value.lists.find(l => l.id === listId)
-    if (!list) return
+  if (removedIndex === null && addedIndex === null) return arr
 
-    const maxPosition = list.cards.length > 0
-      ? Math.max(...list.cards.map(c => c.position)) + 1
-      : 0
+  const result = [...arr]
+  let itemToAdd = payload
 
-    await $fetch('/api/cards', {
-      method: 'POST',
-      body: {
-        title: data.title,
-        position: maxPosition,
-        listId
-      }
-    })
-    await refresh()
-    next?.()
-    creatingCardFor.value = null
-    cardState.title = undefined
+  if (removedIndex !== null) {
+    itemToAdd = result.splice(removedIndex, 1)[0]
+  }
 
-    add({
-      title: 'Carte créée',
-      description: 'La nouvelle carte a été créée avec succès.',
-      color: 'success'
-    })
-  } catch (error: any) {
-    add({
-      color: 'error',
-      title: 'Erreur',
-      description: error.message || 'Impossible de créer la carte'
-    })
+  if (addedIndex !== null) {
+    result.splice(addedIndex, 0, itemToAdd)
+  }
+
+  return result
+}
+
+const getCardPayload = (listId: string) => (index: number) => {
+  const list = board.value?.lists.find((l) => l.id === listId)
+  return list?.cards[index]
+}
+
+async function onCardDrop(listId: string, dropResult: any) {
+  if (!board.value || dropResult.removedIndex === null && dropResult.addedIndex === null) return
+
+  const listIndex = board.value.lists.findIndex((l) => l.id === listId)
+  const list = board.value.lists[listIndex]
+
+  const newCards = applyDrag(list!.cards, dropResult)
+
+  board.value.lists[listIndex]!.cards = newCards
+
+  if (dropResult.addedIndex !== null) {
+    const card = dropResult.payload
+
+    try {
+      await $fetch(`/api/cards/${card.id}`, {
+        method: 'PATCH',
+        body: {
+          listId: listId,
+          position: dropResult.addedIndex * 1000 + 1000
+        }
+      })
+    } catch (error: any) {
+      add({
+        color: 'error',
+        title: 'Error',
+        description: error.message || 'Unable to move the card'
+      })
+    } finally {
+      await refresh()
+    }
   }
 }
 
-// Fonction pour supprimer une liste
-async function deleteList(listId: string) {
-  try {
-    await $fetch(`/api/lists/${listId}`, {
-      method: 'DELETE'
-    })
-
-    await refresh()
-
-    add({
-      title: 'Liste supprimée',
-      description: 'La liste a été supprimée avec succès.',
-      color: 'success'
-    })
-  } catch (error: any) {
-    add({
-      color: 'error',
-      title: 'Erreur',
-      description: error.message || 'Impossible de supprimer la liste'
-    })
-  }
+// Récupère la liste en fonction de l'index
+const getListPayload = (index: number) => {
+  return board.value?.lists[index]
 }
 
-// Fonction pour supprimer une carte
-async function deleteCard(cardId: string) {
-  try {
-    await $fetch(`/api/cards/${cardId}`, {
-      method: 'DELETE'
-    })
+async function onListDrop(dropResult: any) {
+  if (!board.value || (dropResult.removedIndex === null && dropResult.addedIndex === null)) return
 
-    await refresh()
+  const newLists = applyDrag(board.value.lists, dropResult)
+  board.value.lists = newLists
 
-    add({
-      title: 'Carte supprimée',
-      description: 'La carte a été supprimée avec succès.',
-      color: 'success'
-    })
-  } catch (error: any) {
-    add({
-      color: 'error',
-      title: 'Erreur',
-      description: error.message || 'Impossible de supprimer la carte'
-    })
+  if (dropResult.addedIndex !== null && dropResult.removedIndex !== dropResult.addedIndex) {
+    const list = dropResult.payload
+
+    try {
+      await $fetch(`/api/lists/${list.id}`, {
+        method: 'PATCH',
+        body: {
+          boardId: board.value.id,
+          position: dropResult.addedIndex * 1000 + 1000
+        }
+      })
+    } catch (error: any) {
+      add({
+        color: 'error',
+        title: 'Error',
+        description: error.message || 'Unable to move the list'
+      })
+
+      refresh()
+    }
   }
-}
-
-// Mapping des couleurs
-const colorMap: Record<string, string> = {
-  GRAY: 'bg-gray-200 dark:bg-gray-700',
-  RED: 'bg-red-200 dark:bg-red-700',
-  YELLOW: 'bg-yellow-200 dark:bg-yellow-700',
-  GREEN: 'bg-green-200 dark:bg-green-700',
-  SKY: 'bg-sky-200 dark:bg-sky-700',
-  BLUE: 'bg-blue-200 dark:bg-blue-700',
-  VIOLET: 'bg-violet-200 dark:bg-violet-700',
-  PINK: 'bg-pink-200 dark:bg-pink-700'
 }
 </script>
 
 <template>
-  <div class="flex flex-col h-[calc(100vh-64px)]">
-    <!-- Header -->
-    <div class="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex-shrink-0">
+  <ClientOnly>
+    <Teleport to="#navbar-left">
       <UButton
         to="/boards"
         variant="ghost"
-        icon="i-ph-arrow-left"
+        color="neutral"
         size="sm"
-      >
-        Retour
-      </UButton>
-      <h1 class="text-2xl font-bold">{{ board?.name || 'Tableau' }}</h1>
-    </div>
+        icon="i-ph-arrow-left"
+        class="mr-2"
+      />
+    </Teleport>
 
-    <!-- Board Content -->
-    <div class="flex-1 overflow-x-auto overflow-y-hidden bg-gray-50 dark:bg-gray-950 p-4 min-h-0">
-      <div class="flex gap-4 h-full min-w-fit">
-        <!-- Colonnes existantes -->
-        <div
+    <Teleport to="#navbar-right">
+      <UModal title="Create a new list">
+        <UButton
+          icon="i-ph-plus"
+          label="New list"
+        />
+
+        <template #body="{ close }">
+          <UForm
+            :schema="schema"
+            :state="state"
+            class="space-y-4"
+            @submit.prevent="createList($event, close)"
+          >
+            <UFormField name="title" label="Title">
+              <UInput v-model="state.title" placeholder="e.g. In progress" class="w-full" />
+            </UFormField>
+            <UFormField name="color" label="Color">
+              <USelect v-model="state.color" :items="colorItems" value-key="value" class="w-32">
+                <template #leading="{ modelValue }">
+                  <div
+                    class="size-5 rounded-full border-2"
+                    :class="getColors(modelValue!)"
+                  />
+                </template>
+                <template #item-leading="{ item }">
+                  <div
+                    class="size-5 rounded-full border-2"
+                    :class="getColors(item.value)"
+                  />
+                </template>
+              </USelect>
+            </UFormField>
+            <div class="flex w-full justify-end">
+              <UButton
+                type="submit"
+                label="Create list"
+                loading-auto
+              />
+            </div>
+          </UForm>
+        </template>
+      </UModal>
+    </Teleport>
+  </ClientOnly>
+
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <UEmpty
+      v-if="!board?.lists.length"
+      variant="naked"
+      icon="i-ph-cards-three"
+      title="This board is empty"
+      description="Start by adding lists and cards to organize your tasks."
+      :actions="[
+        {
+          label: 'Create a new list'
+        }
+      ]"
+      class="flex-1 sm:p-0 lg:p-0 sm:pb-32 lg:pb-32"
+    />
+
+    <div v-else class="flex flex-col flex-1 min-w-0 overflow-x-auto">
+      <Container
+        group-name="lists"
+        tag="div"
+        orientation="horizontal"
+        drag-class="transform rotate-2 transition-transform"
+        drop-class="transition-transform"
+        class="flex! gap-4 flex-1 p-4"
+        :get-child-payload="getListPayload"
+        @drop="onListDrop"
+      >
+        <Draggable
           v-for="list in board?.lists || []"
           :key="list.id"
-          class="flex-shrink-0 w-72 flex flex-col"
         >
-          <div class="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 flex flex-col h-fit max-h-full">
-            <!-- Header de la liste -->
-            <div
-              class="p-3 rounded-t-lg flex items-center justify-between"
-              :class="colorMap[list.color] || colorMap.GRAY"
-            >
-              <h3 class="font-semibold text-sm">{{ list.title }}</h3>
-              <UButton
-                variant="ghost"
-                color="neutral"
-                icon="i-ph-trash"
-                size="xs"
-                @click="deleteList(list.id)"
-              />
-            </div>
+          <UCard
+            variant="subtle"
+            class="flex flex-col shrink-0 w-72 h-fit"
+            :ui="{
+              body: 'flex flex-col gap-4 flex-1 sm:p-4'
+            }"
+          >
+            <div class="flex justify-between">
+              <div class="flex items-center gap-2">
+                <div
+                  class="size-5 rounded-full border-2"
+                  :class="getColors(list.color)"
+                />
+                <p>{{ list.title }}</p>
+              </div>
 
-            <!-- Cartes -->
-            <div class="flex-1 overflow-y-auto p-2 space-y-2 min-h-[100px] max-h-[calc(100vh-200px)]">
-              <div
+              <div class="flex">
+                <CreateCardModal :board-id="board.id" :list-id="list.id" />
+                <ListActions :list="list" />
+              </div>
+            </div>
+            <Container
+              group-name="cards"
+              tag="div"
+              :should-accept-drop="(e: any) => (e.groupName === 'cards')"
+              :get-child-payload="getCardPayload(list.id)"
+              :drop-placeholder="{
+                className: 'bg-elevated border border-dashed border-muted mb-2',
+                animationDuration: 150
+              }"
+              drag-class="transition-transform ease-in z-50 transform rotate-2"
+              drop-class="transition-transform ease-in z-50"
+              class="flex flex-col flex-1"
+              @drop="onCardDrop(list.id, $event)"
+            >
+              <Draggable
                 v-for="card in list.cards"
                 :key="card.id"
-                class="bg-white dark:bg-gray-800 p-3 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer group"
               >
-                <div class="flex items-start justify-between gap-2">
-                  <p class="text-sm font-medium flex-1">{{ card.title }}</p>
-                  <UButton
-                    variant="ghost"
-                    color="neutral"
-                    icon="i-ph-trash"
-                    size="xs"
-                    class="opacity-0 group-hover:opacity-100 transition-opacity"
-                    @click.stop="deleteCard(card.id)"
-                  />
-                </div>
-                <p
-                  v-if="card.description"
-                  class="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2"
-                >
-                  {{ card.description }}
-                </p>
-                <div
-                  v-if="card.dueDate"
-                  class="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1"
-                >
-                  <UIcon name="i-ph-calendar" class="w-3 h-3" />
-                  {{ new Date(card.dueDate).toLocaleDateString('fr-FR') }}
-                </div>
-              </div>
-
-              <!-- Formulaire d'ajout de carte -->
-              <div v-if="creatingCardFor === list.id" class="p-2">
-                <UForm
-                  :schema="cardSchema"
-                  :state="cardState"
-                  class="space-y-2"
-                  @submit.prevent="createCard($event, list.id, () => {})"
-                >
-                  <UFormField name="title">
-                    <UInput
-                      v-model="cardState.title"
-                      placeholder="Titre de la carte..."
-                      size="sm"
-                      autofocus
-                    />
-                  </UFormField>
-                  <div class="flex gap-2">
-                    <UButton
-                      type="submit"
-                      size="xs"
-                      label="Ajouter"
-                      loading-auto
-                    />
-                    <UButton
-                      variant="ghost"
-                      size="xs"
-                      label="Annuler"
-                      @click="creatingCardFor = null; cardState.title = undefined"
-                    />
-                  </div>
-                </UForm>
-              </div>
-            </div>
-
-            <!-- Bouton pour ajouter une carte -->
-            <div v-if="creatingCardFor !== list.id" class="p-2">
-              <UButton
-                variant="ghost"
-                color="neutral"
-                icon="i-ph-plus"
-                label="Ajouter une carte"
-                size="sm"
-                block
-                @click="creatingCardFor = list.id"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Bouton pour ajouter une liste -->
-        <div class="flex-shrink-0 w-72">
-          <div
-            v-if="creatingListFor === null"
-            class="bg-gray-200 dark:bg-gray-800 rounded-lg p-4 h-fit min-h-[100px] flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 transition-colors cursor-pointer"
-            @click="creatingListFor = 'new'"
-          >
-            <UButton
-              variant="ghost"
-              color="neutral"
-              icon="i-ph-plus"
-              label="Ajouter une liste"
-              size="sm"
-            />
-          </div>
-
-          <!-- Formulaire d'ajout de liste -->
-          <div
-            v-else
-            class="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-3"
-          >
-            <UForm
-              :schema="listSchema"
-              :state="listState"
-              class="space-y-2"
-              @submit.prevent="createList($event, () => {})"
-            >
-              <UFormField name="title">
-                <UInput
-                  v-model="listState.title"
-                  placeholder="Titre de la liste..."
-                  size="sm"
-                  autofocus
-                />
-              </UFormField>
-              <div class="flex gap-2">
-                <UButton
-                  type="submit"
-                  size="xs"
-                  label="Ajouter"
-                  loading-auto
-                />
-                <UButton
-                  variant="ghost"
-                  size="xs"
-                  label="Annuler"
-                  @click="creatingListFor = null; listState.title = undefined"
-                />
-              </div>
-            </UForm>
-          </div>
-        </div>
-      </div>
+                <NuxtLink :to="`/boards/${board?.id}/cards/${card.id}`" :draggable="false">
+                  <UCard class="ring-inset mb-2">
+                    <p class="font-medium">{{ card.title }}</p>
+                    <div class="flex mt-1">
+                      <UBadge
+                        v-for="label in card.labels"
+                        :key="label.id"
+                        variant="outline"
+                        color="neutral"
+                        :label="label.name"
+                        size="sm"
+                        class="mr-1"
+                      >
+                        <template #leading>
+                          <span
+                            class="inline-block rounded-full size-2 shrink-0 ml-1"
+                            :style="{ backgroundColor: label.color }"
+                          />
+                        </template>
+                      </UBadge>
+                    </div>
+                  </UCard>
+                </NuxtLink>
+              </Draggable>
+            </Container>
+          </UCard>
+        </Draggable>
+      </Container>
     </div>
   </div>
 </template>
