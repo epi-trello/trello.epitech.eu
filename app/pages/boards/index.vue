@@ -19,6 +19,7 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>
 
+  
 const state = reactive<Partial<Schema>>({
   name: undefined
 })
