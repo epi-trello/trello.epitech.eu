@@ -240,7 +240,8 @@ function initSortables() {
             // le contexte (currentRenderingInstance null) en repatchant un DOM déjà modifié.
             const from = evt.from
             const children = from.children
-            const insertBefore = children[evt.oldIndex ?? 0] ?? null
+            const refIndex = (evt.oldIndex ?? 0) + 1
+            const insertBefore = children[refIndex] ?? null
             from.insertBefore(itemEl, insertBefore)
 
             // Persister côté API ; le refresh() mettra à jour les données et Vue re-rendra proprement.
