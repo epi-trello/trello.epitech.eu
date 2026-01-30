@@ -10,6 +10,12 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2025-01-15',
 
+  nitro: {
+    experimental: {
+      openAPI: true
+    }
+  },
+
   eslint: {
     config: {
       stylistic: {
