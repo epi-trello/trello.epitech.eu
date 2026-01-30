@@ -77,7 +77,7 @@ async function deleteBoard(boardId: string, next?: () => void) {
 
 <template>
   <ClientOnly>
-    <Teleport to="#navbar-actions">
+    <Teleport to="#navbar-right">
       <UModal title="Create a new board" @update:open="state.name = undefined">
         <UButton
           icon="i-ph-plus"
