@@ -35,6 +35,8 @@ const state = reactive<Partial<Schema>>({
   color: 'GRAY'
 })
 
+const createListModalOpen = ref(false)
+
 async function createList({ data }: FormSubmitEvent<Schema>, next?: () => void) {
   if (!board.value) return
 
@@ -133,7 +135,7 @@ async function onCardDragEnd(evt: { item: HTMLElement, to: { el: HTMLElement }, 
     </Teleport>
 
     <Teleport to="#navbar-right">
-      <UModal title="Create a new list">
+      <UModal v-model:open="createListModalOpen" title="Create a new list">
         <UButton
           icon="i-ph-plus"
           label="New list"
@@ -184,13 +186,16 @@ async function onCardDragEnd(evt: { item: HTMLElement, to: { el: HTMLElement }, 
         icon="i-ph-cards-three"
         title="This board is empty"
         description="Start by adding lists and cards to organize your tasks."
-        :actions="[
-          {
-            label: 'Create a new list'
-          }
-        ]"
         class="flex-1 sm:p-0 lg:p-0 sm:pb-32 lg:pb-32"
-      />
+      >
+        <template #actions>
+          <UButton
+            icon="i-ph-plus"
+            label="Create a new list"
+            @click="createListModalOpen = true"
+          />
+        </template>
+      </UEmpty>
 
       <div v-else class="flex flex-col flex-1 min-w-0 overflow-x-auto">
         <VueDraggable
