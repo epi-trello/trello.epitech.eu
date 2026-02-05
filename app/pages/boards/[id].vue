@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { VueDraggable } from 'vue-draggable-plus'
 import { colorItems, getColors } from '~/utils/lib'
 import { z } from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
@@ -7,6 +6,8 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 definePageMeta({
   layout: 'dashboard'
 })
+
+type SortableInstance = { destroy: () => void }
 
 const { params } = useRoute()
 const title = usePageTitle()
@@ -22,6 +23,14 @@ watch(_board, (newBoard) => {
 })
 
 title.value = board.value ? board.value.name : 'Unknown'
+
+// Copie locale des listes pour Sortable.js (comme avant le merge)
+const lists = ref<NonNullable<typeof _board.value>['lists']>([])
+
+watch(() => board.value?.lists, (newLists) => {
+  if (!newLists) return
+  lists.value = newLists.map(l => ({ ...l, cards: (l.cards || []).map(c => ({ ...c })) }))
+}, { immediate: true, deep: true })
 
 const schema = z.object({
   title: z.string('Title is required').min(1, 'Title is required'),
@@ -72,44 +81,15 @@ async function createList({ data }: FormSubmitEvent<Schema>, next?: () => void) 
   }
 }
 
-async function onListDragEnd(evt: { oldIndex: number, newIndex: number }) {
-  if (!board.value || evt.oldIndex === evt.newIndex) return
-
-  const list = board.value.lists[evt.newIndex]
-  if (!list) return
-
-  try {
-    await $fetch(`/api/lists/${list.id}`, {
-      method: 'PATCH',
-      body: {
-        boardId: board.value.id,
-        position: evt.newIndex * 1000 + 1000
-      }
-    })
-  } catch (error: any) {
-    add({
-      color: 'error',
-      title: 'Error',
-      description: error.message || 'Unable to move the list'
-    })
-    await refresh()
-  }
-}
-
-async function onCardDragEnd(evt: { item: HTMLElement, to: { el: HTMLElement }, from?: { el: HTMLElement }, newIndex: number, oldIndex: number }) {
-  const cardId = evt.item?.dataset?.cardId
-  const toListId = evt.to?.el?.dataset?.listId
-  if (!board.value || !cardId || !toListId) return
-  if (evt.oldIndex === evt.newIndex && evt.from?.el === evt.to?.el) return
-
+// Sortable.js : même logique qu’avant le merge (commit 95773a6)
+async function moveCard(cardId: string, newListId: string, newPosition: number) {
+  if (!board.value) return
   try {
     await $fetch(`/api/cards/${cardId}`, {
       method: 'PATCH',
-      body: {
-        listId: toListId,
-        position: evt.newIndex * 1000 + 1000
-      }
+      body: { listId: newListId, position: newPosition }
     })
+    await refresh()
   } catch (error: any) {
     add({
       color: 'error',
@@ -119,6 +99,72 @@ async function onCardDragEnd(evt: { item: HTMLElement, to: { el: HTMLElement }, 
     await refresh()
   }
 }
+
+const boardListsContainerRef = ref<HTMLElement | null>(null)
+const sortableInstances = ref<Record<string, SortableInstance>>({})
+
+function initSortables() {
+  if (import.meta.server || !lists.value.length || !boardListsContainerRef.value) return
+
+  nextTick(() => {
+    requestAnimationFrame(async () => {
+      const Sortable = (await import('sortablejs')).default
+      const container = boardListsContainerRef.value
+      if (!container) return
+
+      for (const list of lists.value) {
+        const el = container.querySelector<HTMLElement>(`[data-list-id="${list.id}"]`)
+        if (!el) continue
+        const existing = sortableInstances.value[list.id]
+        if (existing) {
+          existing.destroy()
+          delete sortableInstances.value[list.id]
+        }
+
+        const sortable = Sortable.create(el, {
+          group: 'cards',
+          animation: 150,
+          ghostClass: 'opacity-50',
+          chosenClass: 'cursor-grabbing',
+          dragClass: 'cursor-grabbing',
+          dataIdAttr: 'data-id',
+          forceFallback: false,
+          onEnd(evt: { item: HTMLElement, from: HTMLElement, to: HTMLElement, oldIndex?: number, newIndex?: number }) {
+            const itemEl = evt.item
+            const cardId = itemEl?.getAttribute?.('data-id')
+            const toListId = evt.to?.getAttribute?.('data-list-id')
+            if (!cardId || !toListId) return
+
+            const from = evt.from
+            const children = Array.from(from.children)
+            const oldIndex = evt.oldIndex ?? 0
+            const insertBefore = children[oldIndex] ?? null
+            from.insertBefore(itemEl, insertBefore)
+
+            moveCard(cardId, toListId, evt.newIndex ?? 0)
+          }
+        })
+        sortableInstances.value[list.id] = sortable as SortableInstance
+      }
+    })
+  })
+}
+
+watch(
+  () => [boardListsContainerRef.value, lists.value.length] as const,
+  () => initSortables(),
+  { flush: 'post', immediate: false }
+)
+
+onMounted(() => {
+  nextTick(() => {
+    setTimeout(initSortables, 50)
+  })
+})
+
+onBeforeUnmount(() => {
+  Object.values(sortableInstances.value).forEach(s => s?.destroy())
+})
 </script>
 
 <template>
@@ -197,58 +243,47 @@ async function onCardDragEnd(evt: { item: HTMLElement, to: { el: HTMLElement }, 
         </template>
       </UEmpty>
 
-      <div v-else class="flex flex-col flex-1 min-w-0 overflow-x-auto">
-        <VueDraggable
-          v-model="board.lists"
-          group="lists"
-          tag="div"
-          class="flex gap-4 flex-1 p-4"
-          ghost-class="opacity-50"
-          chosen-class="ring-2 ring-primary/50"
-          drag-class="cursor-grabbing"
-          @end="onListDragEnd"
-        >
-          <UCard
-            v-for="list in board.lists"
+      <!-- Même structure qu’avant le merge : ref sur le conteneur, querySelector pour [data-list-id] -->
+      <div class="flex flex-col flex-1 min-w-0 overflow-x-auto">
+        <div ref="boardListsContainerRef" class="flex gap-4 flex-1 p-4 min-w-fit">
+          <div
+            v-for="list in lists"
             :key="list.id"
-            variant="subtle"
-            class="flex flex-col shrink-0 w-72 h-fit"
-            :ui="{
-              body: 'flex flex-col gap-4 flex-1 sm:p-4'
-            }"
+            class="flex flex-col shrink-0 w-72"
           >
-            <div class="flex justify-between">
-              <div class="flex items-center gap-2">
-                <div
-                  class="size-5 rounded-full border-2"
-                  :class="getColors(list.color)"
-                />
-                <p>{{ list.title }}</p>
-              </div>
-
-              <div class="flex">
-                <CreateCardModal :board-id="board.id" :list-id="list.id" />
-                <ListActions :list="list" />
-              </div>
-            </div>
-            <VueDraggable
-              v-model="list.cards"
-              group="cards"
-              tag="div"
-              :data-list-id="list.id"
-              class="flex flex-col flex-1 min-h-2"
-              ghost-class="opacity-50"
-              chosen-class="ring-2 ring-primary/30"
-              drag-class="cursor-grabbing"
-              @end="onCardDragEnd"
+            <UCard
+              variant="subtle"
+              class="flex flex-col h-fit"
+              :ui="{
+                body: 'flex flex-col gap-4 flex-1 sm:p-4'
+              }"
             >
+              <div class="flex justify-between">
+                <div class="flex items-center gap-2">
+                  <div
+                    class="size-5 rounded-full border-2"
+                    :class="getColors(list.color)"
+                  />
+                  <p>{{ list.title }}</p>
+                </div>
+
+<div v-if="board" class="flex">
+                  <CreateCardModal :board-id="board.id" :list-id="list.id" />
+                  <ListActions :list="list" />
+                </div>
+              </div>
+              <!-- Conteneur Sortable.js (data-list-id pour querySelector + onEnd) -->
               <div
-                v-for="card in list.cards"
-                :key="card.id"
-                :data-card-id="card.id"
-                class="mb-2"
+                :data-list-id="list.id"
+                class="flex flex-col flex-1 min-h-24 rounded-md space-y-2"
               >
-                <NuxtLink :to="`/boards/${board?.id}/cards/${card.id}`" class="block">
+                <div
+                  v-for="card in list.cards"
+                  :key="card.id"
+                  :data-id="card.id"
+                  class="cursor-grab active:cursor-grabbing"
+                  @click="navigateTo(`/boards/${board?.id}/cards/${card.id}`)"
+                >
                   <UCard class="ring-inset">
                     <p class="font-medium">{{ card.title }}</p>
                     <div class="flex mt-1">
@@ -270,11 +305,11 @@ async function onCardDragEnd(evt: { item: HTMLElement, to: { el: HTMLElement }, 
                       </UBadge>
                     </div>
                   </UCard>
-                </NuxtLink>
+                </div>
               </div>
-            </VueDraggable>
-          </UCard>
-        </VueDraggable>
+            </UCard>
+          </div>
+        </div>
       </div>
     </div>
 
