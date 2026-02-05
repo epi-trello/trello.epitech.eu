@@ -90,10 +90,25 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
         </NuxtLink>
       </template>
 
-      <UNavigationMenu
-        :items="navItems"
-        orientation="vertical"
-      />
+      <ClientOnly>
+        <UNavigationMenu
+          :items="navItems"
+          orientation="vertical"
+        />
+        <template #fallback>
+          <nav class="flex flex-col gap-0.5" aria-label="Navigation">
+            <NuxtLink
+              v-for="item in navItems"
+              :key="item.label"
+              :to="item.to"
+              class="flex items-center gap-2 text-muted hover:text-highlighted px-2 py-1.5 rounded-md text-sm"
+            >
+              <UIcon v-if="item.icon" :name="item.icon" class="size-4 shrink-0" />
+              {{ item.label }}
+            </NuxtLink>
+          </nav>
+        </template>
+      </ClientOnly>
 
       <template #footer>
         <ClientOnly>
