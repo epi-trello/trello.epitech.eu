@@ -2,11 +2,25 @@
 export default defineNuxtConfig({
   modules: ['@nuxt/eslint', '@nuxt/ui'],
 
+  // Désactive le SSR pour éviter le bug reka-ui + Vue 3.5 (currentRenderingInstance null
+  // dans renderSlot : ConfigProvider, NavigationMenuRoot, DialogRoot, etc.)
+  ssr: false,
+
   devtools: {
     enabled: true
   },
 
   css: ['~/assets/css/main.css'],
+
+  // Désactiver SSR pour éviter "Cannot read properties of null (reading 'ce')" (reka-ui / Nuxt UI en SSR)
+  routeRules: {
+    '/': { ssr: false },
+    '/boards': { ssr: false },
+    '/boards/**': { ssr: false },
+    '/login': { ssr: false },
+    '/sign-up': { ssr: false },
+    '/settings': { ssr: false }
+  },
 
   compatibilityDate: '2025-01-15',
 

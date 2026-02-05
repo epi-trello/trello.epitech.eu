@@ -15,6 +15,9 @@ export default defineEventHandler(async (event) => {
         },
         include: {
           cards: {
+            include: {
+              labels: true
+            },
             orderBy: {
               position: 'asc'
             }

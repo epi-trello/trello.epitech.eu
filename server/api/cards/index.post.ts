@@ -24,9 +24,12 @@ export default defineEventHandler(async (event) => {
       title: data.title,
       description: data.description,
       position: data.position,
-      startDate: data.startDate,
-      dueDate: data.dueDate,
-      listId: data.listId
+      startDate: data.startDate ? new Date(data.startDate) : undefined,
+      dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+      listId: data.listId,
+      labels: {
+        connect: data.labels?.map(label => ({ id: label })) || []
+      }
     }
   })
 
