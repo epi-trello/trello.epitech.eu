@@ -16,11 +16,25 @@ const items = computed(() => [{
     </template>
 
     <template #right>
-      <UNavigationMenu
-        :items="items"
-        variant="link"
-        class="hidden lg:block"
-      />
+      <ClientOnly>
+        <UNavigationMenu
+          :items="items"
+          variant="link"
+          class="hidden lg:block"
+        />
+        <template #fallback>
+          <nav class="hidden lg:flex items-center gap-1" aria-label="Navigation">
+            <NuxtLink
+              v-for="item in items"
+              :key="item.label"
+              :to="item.to"
+              class="text-muted hover:text-highlighted text-sm font-medium px-3 py-2 rounded-md"
+            >
+              {{ item.label }}
+            </NuxtLink>
+          </nav>
+        </template>
+      </ClientOnly>
 
       <UButton
         v-if="user"

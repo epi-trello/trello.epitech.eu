@@ -90,10 +90,25 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
         </NuxtLink>
       </template>
 
-      <UNavigationMenu
-        :items="navItems"
-        orientation="vertical"
-      />
+      <ClientOnly>
+        <UNavigationMenu
+          :items="navItems"
+          orientation="vertical"
+        />
+        <template #fallback>
+          <nav class="flex flex-col gap-0.5" aria-label="Navigation">
+            <NuxtLink
+              v-for="item in navItems"
+              :key="item.label"
+              :to="item.to"
+              class="flex items-center gap-2 text-muted hover:text-highlighted px-2 py-1.5 rounded-md text-sm"
+            >
+              <UIcon v-if="item.icon" :name="item.icon" class="size-4 shrink-0" />
+              {{ item.label }}
+            </NuxtLink>
+          </nav>
+        </template>
+      </ClientOnly>
 
       <template #footer>
         <ClientOnly>
@@ -140,9 +155,11 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
         </ClientOnly>
       </template>
     </UDashboardSidebar>
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-      <UDashboardNavbar class="flex-shrink-0">
-        <template #title>
+    <div class="flex flex-col flex-1 min-w-0">
+      <UDashboardNavbar :ui="{ left: 'gap-0' }">
+        <template #left>
+          <div id="navbar-left" />
+
           <ClientOnly>
             <h1 class="flex items-center gap-1.5 font-semibold text-highlighted truncate">
               {{ title }}
@@ -155,7 +172,7 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
         </template>
 
         <template #right>
-          <div id="navbar-actions" />
+          <div id="navbar-right" />
         </template>
       </UDashboardNavbar>
       <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">

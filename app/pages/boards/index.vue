@@ -93,8 +93,8 @@ async function deleteBoard(boardId: string, next?: () => void) {
 
 <template>
   <ClientOnly>
-    <Teleport to="#navbar-actions">
-      <UModal v-model="isModalOpen" title="Create a new board" @update:open="(val) => { isModalOpen = val; if (!val) state.name = undefined }">
+    <Teleport to="#navbar-right">
+      <UModal title="Create a new board" @update:open="state.name = undefined">
         <UButton
           icon="i-ph-plus"
           label="Create"

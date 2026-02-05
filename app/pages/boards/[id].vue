@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { VueDraggable } from 'vue-draggable-plus'
+import { colorItems, getColors } from '~/utils/lib'
 import { z } from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 
@@ -6,55 +8,34 @@ definePageMeta({
   layout: 'dashboard'
 })
 
-// Sortable.js : import dynamique pour ne jamais l'exécuter côté serveur (évite erreur SSR)
-type SortableInstance = { destroy: () => void }
-
 const { params } = useRoute()
 const title = usePageTitle()
 const { add } = useToast()
 
-const { data: board, refresh } = await useFetch(`/api/boards/${params.id}`)
+const { data: _board, refresh } = await useFetch(`/api/boards/${params.id}`)
+const board = ref(_board.value)
+
+watch(_board, (newBoard) => {
+  if (newBoard) {
+    board.value = newBoard
+  }
+})
 
 title.value = board.value ? board.value.name : 'Unknown'
 
-// Copie locale des listes pour le drag-and-drop (vuedraggable modifie les tableaux)
-const lists = ref<Array<{ id: string, title: string, color: string, cards: Array<{ id: string, title: string, description?: string | null, position: number, dueDate?: string | null, [key: string]: unknown }> }>>([])
-
-watch(() => board.value?.lists, (newLists) => {
-  if (!newLists) return
-  lists.value = newLists.map(l => ({
-    ...l,
-    cards: (l.cards || []).map(c => ({ ...c }))
-  }))
-}, { immediate: true, deep: true })
-
-// Schema pour créer une liste
-const listSchema = z.object({
-  title: z.string().min(1, { message: 'Le titre est requis' }).max(255)
+const schema = z.object({
+  title: z.string('Title is required').min(1, 'Title is required'),
+  color: z.enum(['GRAY', 'RED', 'YELLOW', 'GREEN', 'SKY', 'BLUE', 'VIOLET', 'PINK'])
 })
 
-type ListSchema = z.output<typeof listSchema>
+type Schema = z.output<typeof schema>
 
-const listState = reactive<Partial<ListSchema>>({
-  title: undefined
+const state = reactive<Partial<Schema>>({
+  title: undefined,
+  color: 'GRAY'
 })
 
-// Schema pour créer une carte
-const cardSchema = z.object({
-  title: z.string().min(1, { message: 'Le titre est requis' }).max(255)
-})
-
-type CardSchema = z.output<typeof cardSchema>
-
-const cardState = reactive<Partial<CardSchema>>({
-  title: undefined
-})
-
-const creatingListFor = ref<string | null>(null)
-const creatingCardFor = ref<string | null>(null)
-
-// Fonction pour créer une liste
-async function createList({ data }: FormSubmitEvent<ListSchema>, next?: () => void) {
+async function createList({ data }: FormSubmitEvent<Schema>, next?: () => void) {
   if (!board.value) return
 
   try {
@@ -67,506 +48,231 @@ async function createList({ data }: FormSubmitEvent<ListSchema>, next?: () => vo
       body: {
         title: data.title,
         position: maxPosition,
-        color: 'GRAY'
+        color: data.color
       }
     })
 
-    await refresh()
+    await refreshNuxtData()
     next?.()
-    creatingListFor.value = null
-    listState.title = undefined
+    state.title = undefined
 
     add({
-      title: 'Liste créée',
-      description: 'La nouvelle liste a été créée avec succès.',
+      title: 'List created',
+      description: 'The new list has been successfully created.',
       color: 'success'
     })
   } catch (error: any) {
     add({
       color: 'error',
-      title: 'Erreur',
-      description: error.message || 'Impossible de créer la liste'
+      title: 'Error',
+      description: error.message || 'Unable to create the list'
     })
   }
 }
 
-// Fonction pour créer une carte
-async function createCard({ data }: FormSubmitEvent<CardSchema>, listId: string, next?: () => void) {
-  if (!board.value) return
+async function onListDragEnd(evt: { oldIndex: number, newIndex: number }) {
+  if (!board.value || evt.oldIndex === evt.newIndex) return
+
+  const list = board.value.lists[evt.newIndex]
+  if (!list) return
 
   try {
-    const list = board.value.lists.find(l => l.id === listId)
-    if (!list) return
-
-    const maxPosition = list.cards.length > 0
-      ? Math.max(...list.cards.map(c => c.position)) + 1
-      : 0
-
-    await $fetch('/api/cards', {
-      method: 'POST',
+    await $fetch(`/api/lists/${list.id}`, {
+      method: 'PATCH',
       body: {
-        title: data.title,
-        position: maxPosition,
-        listId
+        boardId: board.value.id,
+        position: evt.newIndex * 1000 + 1000
       }
     })
-    await refresh()
-    next?.()
-    creatingCardFor.value = null
-    cardState.title = undefined
-
-    add({
-      title: 'Carte créée',
-      description: 'La nouvelle carte a été créée avec succès.',
-      color: 'success'
-    })
   } catch (error: any) {
     add({
       color: 'error',
-      title: 'Erreur',
-      description: error.message || 'Impossible de créer la carte'
+      title: 'Error',
+      description: error.message || 'Unable to move the list'
     })
-  }
-}
-
-// Fonction pour supprimer une liste
-async function deleteList(listId: string) {
-  try {
-    await $fetch(`/api/lists/${listId}`, {
-      method: 'DELETE'
-    })
-
     await refresh()
-
-    add({
-      title: 'Liste supprimée',
-      description: 'La liste a été supprimée avec succès.',
-      color: 'success'
-    })
-  } catch (error: any) {
-    add({
-      color: 'error',
-      title: 'Erreur',
-      description: error.message || 'Impossible de supprimer la liste'
-    })
   }
 }
 
-// Fonction pour supprimer une carte
-async function deleteCard(cardId: string) {
-  try {
-    await $fetch(`/api/cards/${cardId}`, {
-      method: 'DELETE'
-    })
-
-    await refresh()
-
-    add({
-      title: 'Carte supprimée',
-      description: 'La carte a été supprimée avec succès.',
-      color: 'success'
-    })
-  } catch (error: any) {
-    add({
-      color: 'error',
-      title: 'Erreur',
-      description: error.message || 'Impossible de supprimer la carte'
-    })
-  }
-}
-
-// Fonction pour déplacer une carte (appelée après un drag avec vuedraggable)
-async function moveCard(cardId: string, newListId: string, newPosition: number) {
-  if (!board.value) return
+async function onCardDragEnd(evt: { item: HTMLElement, to: { el: HTMLElement }, from?: { el: HTMLElement }, newIndex: number, oldIndex: number }) {
+  const cardId = evt.item?.dataset?.cardId
+  const toListId = evt.to?.el?.dataset?.listId
+  if (!board.value || !cardId || !toListId) return
+  if (evt.oldIndex === evt.newIndex && evt.from?.el === evt.to?.el) return
 
   try {
     await $fetch(`/api/cards/${cardId}`, {
       method: 'PATCH',
       body: {
-        listId: newListId,
-        position: newPosition
+        listId: toListId,
+        position: evt.newIndex * 1000 + 1000
       }
     })
-
-    await refresh()
   } catch (error: any) {
     add({
       color: 'error',
-      title: 'Erreur',
-      description: error.message || 'Impossible de déplacer la carte'
+      title: 'Error',
+      description: error.message || 'Unable to move the card'
     })
-  }
-}
-
-// Sortable.js : ref du conteneur des listes (pour querySelector, plus fiable que refs dans v-for)
-const boardListsContainerRef = ref<HTMLElement | null>(null)
-const sortableInstances = ref<Record<string, SortableInstance | null>>({})
-
-// Créer les instances Sortable quand le DOM est prêt (uniquement côté client)
-function initSortables() {
-  if (import.meta.server || !lists.value.length || !boardListsContainerRef.value) return
-
-  nextTick(() => {
-    requestAnimationFrame(async () => {
-      // @ts-expect-error pas de types pour sortablejs
-      const Sortable = (await import('sortablejs')).default
-      const container = boardListsContainerRef.value
-      if (!container) return
-
-      for (const list of lists.value) {
-        const el = container.querySelector<HTMLElement>(`[data-list-id="${list.id}"]`)
-        if (!el) continue
-        if (sortableInstances.value[list.id]) {
-          sortableInstances.value[list.id]?.destroy()
-          sortableInstances.value[list.id] = null
-        }
-
-        const sortable = Sortable.create(el, {
-          group: 'cards',
-          animation: 150,
-          ghostClass: 'opacity-50',
-          chosenClass: 'cursor-grabbing',
-          dragClass: 'cursor-grabbing',
-          dataIdAttr: 'data-id',
-          forceFallback: false,
-          onEnd(evt: { item: HTMLElement, from: HTMLElement, to: HTMLElement, oldIndex?: number, newIndex?: number }) {
-            const itemEl = evt.item
-            const cardId = itemEl?.getAttribute?.('data-id')
-            const fromListId = evt.from?.getAttribute?.('data-list-id')
-            const toListId = evt.to?.getAttribute?.('data-list-id')
-            if (!cardId || !fromListId || !toListId) return
-
-            // Annuler le déplacement DOM fait par Sortable pour éviter que Vue ne perde
-            // le contexte (currentRenderingInstance null) en repatchant un DOM déjà modifié.
-            const from = evt.from
-            const children = from.children
-            const refIndex = (evt.oldIndex ?? 0) + 1
-            const insertBefore = children[refIndex] ?? null
-            from.insertBefore(itemEl, insertBefore)
-
-            // Persister côté API ; le refresh() mettra à jour les données et Vue re-rendra proprement.
-            moveCard(cardId, toListId, evt.newIndex ?? 0)
-          }
-        })
-        sortableInstances.value[list.id] = sortable as SortableInstance
-      }
-    })
-  })
-}
-
-watch(
-  () => [boardListsContainerRef.value, lists.value.length] as const,
-  () => initSortables(),
-  { flush: 'post', immediate: false }
-)
-
-onMounted(() => {
-  nextTick(() => {
-    setTimeout(initSortables, 50)
-  })
-})
-
-onBeforeUnmount(() => {
-  Object.values(sortableInstances.value).forEach(s => s?.destroy())
-})
-
-// Mapping des couleurs avec gradients modernes
-const colorMap: Record<string, { bg: string, text: string, border: string }> = {
-  GRAY: {
-    bg: 'bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900',
-    text: 'text-slate-800 dark:text-slate-100',
-    border: 'border-slate-300 dark:border-slate-700'
-  },
-  RED: {
-    bg: 'bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/50 dark:to-red-800/50',
-    text: 'text-red-800 dark:text-red-100',
-    border: 'border-red-300 dark:border-red-700'
-  },
-  YELLOW: {
-    bg: 'bg-gradient-to-br from-amber-100 to-yellow-200 dark:from-amber-900/50 dark:to-yellow-800/50',
-    text: 'text-amber-800 dark:text-amber-100',
-    border: 'border-amber-300 dark:border-amber-700'
-  },
-  GREEN: {
-    bg: 'bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/50 dark:to-green-800/50',
-    text: 'text-emerald-800 dark:text-emerald-100',
-    border: 'border-emerald-300 dark:border-emerald-700'
-  },
-  SKY: {
-    bg: 'bg-gradient-to-br from-sky-100 to-cyan-200 dark:from-sky-900/50 dark:to-cyan-800/50',
-    text: 'text-sky-800 dark:text-sky-100',
-    border: 'border-sky-300 dark:border-sky-700'
-  },
-  BLUE: {
-    bg: 'bg-gradient-to-br from-blue-100 to-indigo-200 dark:from-blue-900/50 dark:to-indigo-800/50',
-    text: 'text-blue-800 dark:text-blue-100',
-    border: 'border-blue-300 dark:border-blue-700'
-  },
-  VIOLET: {
-    bg: 'bg-gradient-to-br from-violet-100 to-purple-200 dark:from-violet-900/50 dark:to-purple-800/50',
-    text: 'text-violet-800 dark:text-violet-100',
-    border: 'border-violet-300 dark:border-violet-700'
-  },
-  PINK: {
-    bg: 'bg-gradient-to-br from-pink-100 to-rose-200 dark:from-pink-900/50 dark:to-rose-800/50',
-    text: 'text-pink-800 dark:text-pink-100',
-    border: 'border-pink-300 dark:border-pink-700'
+    await refresh()
   }
 }
 </script>
 
 <template>
   <ClientOnly>
-    <div class="flex flex-col h-full w-full overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <!-- Header amélioré - Fixe en haut -->
-    <div class="flex items-center justify-between gap-4 px-6 py-4 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm flex-shrink-0 shadow-sm min-w-0">
-      <div class="flex items-center gap-4">
-        <UButton
-          to="/boards"
-          variant="ghost"
-          icon="i-ph-arrow-left"
-          size="sm"
-          class="hover:bg-slate-100 dark:hover:bg-slate-800"
-        >
-          Retour
-        </UButton>
-        <div class="flex items-center gap-3">
-          <div class="h-10 w-1 rounded-full bg-gradient-to-b from-blue-500 to-indigo-600" />
-          <div>
-            <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
-              {{ board?.name || 'Tableau' }}
-            </h1>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {{ board?.lists?.length || 0 }} liste{{ (board?.lists?.length || 0) > 1 ? 's' : '' }}
-            </p>
-          </div>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <UButton
-          variant="ghost"
-          icon="i-ph-star"
-          size="sm"
-          class="hover:bg-slate-100 dark:hover:bg-slate-800"
-        />
-        <UButton
-          variant="ghost"
-          icon="i-ph-bell"
-          size="sm"
-          class="hover:bg-slate-100 dark:hover:bg-slate-800"
-        />
-      </div>
-    </div>
+    <Teleport to="#navbar-left">
+      <UButton
+        to="/boards"
+        variant="ghost"
+        color="neutral"
+        size="sm"
+        icon="i-ph-arrow-left"
+        class="mr-2"
+      />
+    </Teleport>
 
-    <!-- Board Content avec design amélioré - Scroll horizontal uniquement ici -->
-    <div class="flex-1 overflow-x-auto overflow-y-hidden min-h-0 min-w-0">
-      <div ref="boardListsContainerRef" class="flex gap-5 h-full min-w-fit p-6 pb-4">
-        <!-- Colonnes existantes avec design amélioré -->
-        <div
-          v-for="list in lists"
-          :key="list.id"
-          class="flex-shrink-0 w-80 flex flex-col"
-        >
-          <UCard
-            class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-slate-200/80 dark:border-slate-800/80 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col group"
-            :ui="{ body: 'p-0 flex-1 flex flex-col min-h-0 overflow-hidden', header: 'p-0', footer: 'p-0' }"
+    <Teleport to="#navbar-right">
+      <UModal title="Create a new list">
+        <UButton
+          icon="i-ph-plus"
+          label="New list"
+        />
+
+        <template #body="{ close }">
+          <UForm
+            :schema="schema"
+            :state="state"
+            class="space-y-4"
+            @submit.prevent="createList($event, close)"
           >
-            <!-- Header de la liste avec gradient -->
-            <div
-              class="p-4 rounded-t-lg flex items-center justify-between border-b border-slate-200/50 dark:border-slate-700/50 flex-shrink-0"
-              :class="(colorMap[list.color] ?? colorMap.GRAY)?.bg"
-            >
-              <div class="flex items-center gap-2 flex-1">
-                <div class="h-2 w-2 rounded-full bg-current opacity-60" :class="(colorMap[list.color] ?? colorMap.GRAY)?.text" />
-                <h3 class="font-bold text-sm" :class="(colorMap[list.color] ?? colorMap.GRAY)?.text">
-                  {{ list.title }}
-                </h3>
-                <UBadge
-                  :label="list.cards.length.toString()"
-                  color="neutral"
-                  variant="subtle"
-                  size="xs"
-                  class="ml-1"
-                />
-              </div>
+            <UFormField name="title" label="Title">
+              <UInput v-model="state.title" placeholder="e.g. In progress" class="w-full" />
+            </UFormField>
+            <UFormField name="color" label="Color">
+              <USelect v-model="state.color" :items="colorItems" value-key="value" class="w-32">
+                <template #leading="{ modelValue }">
+                  <div
+                    class="size-5 rounded-full border-2"
+                    :class="getColors(modelValue!)"
+                  />
+                </template>
+                <template #item-leading="{ item }">
+                  <div
+                    class="size-5 rounded-full border-2"
+                    :class="getColors(item.value)"
+                  />
+                </template>
+              </USelect>
+            </UFormField>
+            <div class="flex w-full justify-end">
               <UButton
-                variant="ghost"
-                color="neutral"
-                icon="i-ph-trash"
-                size="xs"
-                class="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400"
-                @click="deleteList(list.id)"
+                type="submit"
+                label="Create list"
+                loading-auto
               />
             </div>
+          </UForm>
+        </template>
+      </UModal>
+    </Teleport>
 
-            <!-- Cartes : conteneur pour Sortable.js (data-list-id pour querySelector + onEnd) -->
-            <div class="flex-1 overflow-y-auto p-3 min-h-0 flex flex-col [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <div
-                :data-list-id="list.id"
-                class="space-y-3 flex-1 min-h-[60px]"
-              >
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <UEmpty
+        v-if="!board?.lists?.length"
+        variant="naked"
+        icon="i-ph-cards-three"
+        title="This board is empty"
+        description="Start by adding lists and cards to organize your tasks."
+        :actions="[
+          {
+            label: 'Create a new list'
+          }
+        ]"
+        class="flex-1 sm:p-0 lg:p-0 sm:pb-32 lg:pb-32"
+      />
+
+      <div v-else class="flex flex-col flex-1 min-w-0 overflow-x-auto">
+        <VueDraggable
+          v-model="board.lists"
+          group="lists"
+          tag="div"
+          class="flex gap-4 flex-1 p-4"
+          ghost-class="opacity-50"
+          chosen-class="ring-2 ring-primary/50"
+          drag-class="cursor-grabbing"
+          @end="onListDragEnd"
+        >
+          <UCard
+            v-for="list in board.lists"
+            :key="list.id"
+            variant="subtle"
+            class="flex flex-col shrink-0 w-72 h-fit"
+            :ui="{
+              body: 'flex flex-col gap-4 flex-1 sm:p-4'
+            }"
+          >
+            <div class="flex justify-between">
+              <div class="flex items-center gap-2">
                 <div
-                  v-for="card in list.cards"
-                  :key="card.id"
-                  :data-id="card.id"
-                  class="cursor-grab active:cursor-grabbing"
-                >
-                  <UCard
-                    class="bg-white dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 group/card"
-                    :ui="{ body: 'p-4', header: 'p-0', footer: 'p-0' }"
-                  >
-                    <div class="flex items-start justify-between gap-3">
-                      <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1.5 leading-snug">
-                          {{ card.title }}
-                        </p>
-                        <p
-                          v-if="card.description"
-                          class="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed"
-                        >
-                          {{ card.description }}
-                        </p>
-                      </div>
-                      <UButton
-                        variant="ghost"
+                  class="size-5 rounded-full border-2"
+                  :class="getColors(list.color)"
+                />
+                <p>{{ list.title }}</p>
+              </div>
+
+              <div class="flex">
+                <CreateCardModal :board-id="board.id" :list-id="list.id" />
+                <ListActions :list="list" />
+              </div>
+            </div>
+            <VueDraggable
+              v-model="list.cards"
+              group="cards"
+              tag="div"
+              :data-list-id="list.id"
+              class="flex flex-col flex-1 min-h-2"
+              ghost-class="opacity-50"
+              chosen-class="ring-2 ring-primary/30"
+              drag-class="cursor-grabbing"
+              @end="onCardDragEnd"
+            >
+              <div
+                v-for="card in list.cards"
+                :key="card.id"
+                :data-card-id="card.id"
+                class="mb-2"
+              >
+                <NuxtLink :to="`/boards/${board?.id}/cards/${card.id}`" class="block">
+                  <UCard class="ring-inset">
+                    <p class="font-medium">{{ card.title }}</p>
+                    <div class="flex mt-1">
+                      <UBadge
+                        v-for="label in card.labels"
+                        :key="label.id"
+                        variant="outline"
                         color="neutral"
-                        icon="i-ph-trash"
-                        size="xs"
-                        class="opacity-0 group-hover/card:opacity-100 transition-opacity flex-shrink-0 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400"
-                        @click.stop="deleteCard(card.id)"
-                      />
-                    </div>
-                    <div
-                      v-if="card.dueDate"
-                      class="mt-3 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center gap-1.5"
-                    >
-                      <UIcon name="i-ph-calendar" class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                      <span class="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                        {{ new Date(card.dueDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) }}
-                      </span>
+                        :label="label.name"
+                        size="sm"
+                        class="mr-1"
+                      >
+                        <template #leading>
+                          <span
+                            class="inline-block rounded-full size-2 shrink-0 ml-1"
+                            :style="{ backgroundColor: label.color }"
+                          />
+                        </template>
+                      </UBadge>
                     </div>
                   </UCard>
-                </div>
+                </NuxtLink>
               </div>
-
-              <!-- Formulaire d'ajout de carte amélioré -->
-              <UCard
-                v-if="creatingCardFor === list.id"
-                class="bg-slate-50 dark:bg-slate-800/30 border-2 border-dashed border-slate-300 dark:border-slate-700 mt-3"
-                :ui="{ body: 'p-3', header: 'p-0', footer: 'p-0' }"
-              >
-                <UForm
-                  :schema="cardSchema"
-                  :state="cardState"
-                  class="space-y-3"
-                  @submit.prevent="createCard($event, list.id, () => {})"
-                >
-                  <UFormField name="title">
-                    <UInput
-                      v-model="cardState.title"
-                      placeholder="Titre de la carte..."
-                      size="sm"
-                      autofocus
-                      class="bg-white dark:bg-slate-800"
-                    />
-                  </UFormField>
-                  <div class="flex gap-2">
-                    <UButton
-                      type="submit"
-                      size="sm"
-                      label="Ajouter"
-                      loading-auto
-                      icon="i-ph-check"
-                    />
-                    <UButton
-                      variant="ghost"
-                      size="sm"
-                      label="Annuler"
-                      icon="i-ph-x"
-                      @click="creatingCardFor = null; cardState.title = undefined"
-                    />
-                  </div>
-                </UForm>
-              </UCard>
-            </div>
-
-            <!-- Bouton pour ajouter une carte amélioré - Fixe en bas -->
-            <div v-if="creatingCardFor !== list.id" class="p-3 border-t border-slate-200/60 dark:border-slate-700/60 flex-shrink-0">
-              <UButton
-                variant="ghost"
-                color="neutral"
-                icon="i-ph-plus"
-                label="Ajouter une carte"
-                size="sm"
-                block
-                class="hover:bg-slate-100 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-                @click="creatingCardFor = list.id"
-              />
-            </div>
+            </VueDraggable>
           </UCard>
-        </div>
-
-        <!-- Bouton pour ajouter une liste amélioré -->
-        <div class="flex-shrink-0 w-80">
-          <UCard
-            v-if="creatingListFor === null"
-            class="bg-gradient-to-br from-slate-100/80 to-slate-200/80 dark:from-slate-800/50 dark:to-slate-900/50 backdrop-blur-sm border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 hover:from-slate-200/90 hover:to-slate-300/90 dark:hover:from-slate-700/60 dark:hover:to-slate-800/60 transition-all duration-200 cursor-pointer group h-fit min-h-[120px] flex items-center justify-center"
-            :ui="{ body: 'p-0', header: 'p-0', footer: 'p-0' }"
-            @click="creatingListFor = 'new'"
-          >
-            <div class="flex flex-col items-center gap-2 p-6">
-              <div class="flex h-12 w-12 items-center justify-center rounded-full bg-white/60 dark:bg-slate-800/60 group-hover:bg-white/80 dark:group-hover:bg-slate-700/80 transition-colors">
-                <UIcon name="i-ph-plus" class="h-6 w-6 text-slate-600 dark:text-slate-400" />
-              </div>
-              <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                Ajouter une liste
-              </p>
-            </div>
-          </UCard>
-
-          <!-- Formulaire d'ajout de liste amélioré -->
-          <UCard
-            v-else
-            class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-slate-200/80 dark:border-slate-800/80 shadow-lg"
-            :ui="{ body: 'p-4', header: 'p-0', footer: 'p-0' }"
-          >
-            <UForm
-              :schema="listSchema"
-              :state="listState"
-              class="space-y-3"
-              @submit.prevent="createList($event, () => {})"
-            >
-              <UFormField name="title">
-                <UInput
-                  v-model="listState.title"
-                  placeholder="Titre de la liste..."
-                  size="sm"
-                  autofocus
-                  class="bg-white dark:bg-slate-800"
-                />
-              </UFormField>
-              <div class="flex gap-2">
-                <UButton
-                  type="submit"
-                  size="sm"
-                  label="Ajouter"
-                  loading-auto
-                  icon="i-ph-check"
-                />
-                <UButton
-                  variant="ghost"
-                  size="sm"
-                  label="Annuler"
-                  icon="i-ph-x"
-                  @click="creatingListFor = null; listState.title = undefined"
-                />
-              </div>
-            </UForm>
-          </UCard>
-        </div>
+        </VueDraggable>
       </div>
     </div>
-  </div>
+
     <template #fallback>
       <div class="flex flex-col h-full w-full items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-8">
         <p class="text-slate-500 dark:text-slate-400">Chargement du tableau...</p>
