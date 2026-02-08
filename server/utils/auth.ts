@@ -17,5 +17,6 @@ export const auth = betterAuth({
       lastname: { type: 'string' }
     },
     deleteUser: { enabled: true }
-  }
+  },
+  trustedOrigins: ['*']
 })
