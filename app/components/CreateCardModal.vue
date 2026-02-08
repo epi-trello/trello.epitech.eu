@@ -16,10 +16,10 @@ const schema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   listId: z.string(),
-  startDate: z.custom<CalendarDate>((value) => value instanceof CalendarDate, {
+  startDate: z.custom<CalendarDate>(value => value instanceof CalendarDate, {
     message: 'Invalid date format'
   }).optional(),
-  dueDate: z.custom<CalendarDate>((value) => value instanceof CalendarDate, {
+  dueDate: z.custom<CalendarDate>(value => value instanceof CalendarDate, {
     message: 'Invalid date format'
   }).optional(),
   labels: z.array(z.object({
@@ -46,17 +46,18 @@ const startDate = useTemplateRef('startDate')
 const dueDate = useTemplateRef('dueDate')
 
 const { data: lists } = await useFetch(`/api/boards/${props.boardId}/lists`, {
-  transform: (data) => data.map((list) => ({
+  transform: data => data.map(list => ({
+    id: list.id,
     label: list.title,
-    value: list.id,
-    color: list.color
+    color: list.color,
+    cards: list.cards
   }))
 })
 
 const { data: labels, refresh } = await useFetch(`/api/boards/${props.boardId}/labels`, {
-  transform: (data) => data.map((label) => ({
-    label: label.name,
+  transform: data => data.map(label => ({
     value: label.id,
+    label: label.name,
     color: label.color
   }))
 })
@@ -70,12 +71,17 @@ const labelColor = ref(randomHexColor())
 
 async function onSubmit({ data }: FormSubmitEvent<Schema>, next?: () => void) {
   try {
+    const list = lists.value?.find(l => l.id === data.listId)
+    const maxPosition = list && list.cards.length > 0
+      ? Math.max(...list.cards.map((c) => c.position)) + 1000
+      : 1000
+
     await $fetch(`/api/cards`, {
       method: 'POST',
       body: {
         title: data.title,
         description: data.description,
-        position: 1000,
+        position: maxPosition,
         listId: data.listId,
         startDate: data.startDate ? data.startDate.toString() : undefined,
         dueDate: data.dueDate ? data.dueDate.toString() : undefined,
@@ -170,13 +176,34 @@ function reset() {
         class="space-y-4"
         @submit.prevent="onSubmit($event, close)"
       >
-        <UFormField name="title" label="Title" required>
-          <UInput v-model="state.title" placeholder="e.g. Fix bug #123" class="w-full" />
+        <UFormField
+          name="title"
+          label="Title"
+          required
+        >
+          <UInput
+            v-model="state.title"
+            placeholder="e.g. Fix bug #123"
+            class="w-full"
+          />
         </UFormField>
-        <UFormField name="description" label="Description">
-          <UTextarea v-model="state.description" placeholder="Describe the task..." autoresize :ui="{ base: 'max-h-64' }" class="w-full" />
+        <UFormField
+          name="description"
+          label="Description"
+        >
+          <UTextarea
+            v-model="state.description"
+            placeholder="Describe the task..."
+            autoresize
+            :ui="{ base: 'max-h-64' }"
+            class="w-full"
+          />
         </UFormField>
-        <UFormField name="listId" label="List" required>
+        <UFormField
+          name="listId"
+          label="List"
+          required
+        >
           <USelect
             v-model="state.listId"
             class="w-full max-w-36"
@@ -186,7 +213,7 @@ function reset() {
             <template #leading="{ modelValue }">
               <div
                 class="size-5 rounded-full border-2"
-                :class="getColors(lists?.find(list => list.value === modelValue!)?.color || 'GRAY')"
+                :class="getColors(lists?.find(list => list.id === modelValue!)?.color || 'GRAY')"
               />
             </template>
             <template #item-leading="{ item }">
@@ -198,10 +225,21 @@ function reset() {
           </USelect>
         </UFormField>
         <div class="flex gap-4">
-          <UFormField name="startDate" label="Start date" class="flex-1">
-            <UInputDate ref="startDate" v-model="state.startDate" size="sm">
+          <UFormField
+            name="startDate"
+            label="Start date"
+            class="flex-1"
+          >
+            <UInputDate
+              ref="startDate"
+              v-model="state.startDate"
+              size="sm"
+            >
               <template #trailing>
-                <UPopover :reference="startDate?.inputsRef[3]?.$el"">
+                <UPopover
+                  :reference="startDate?.inputsRef[3]?.$el"
+                  "
+                >
                   <UButton
                     color="neutral"
                     variant="link"
@@ -212,14 +250,25 @@ function reset() {
                   />
 
                   <template #content>
-                    <UCalendar v-model="state.startDate" class="p-2" />
+                    <UCalendar
+                      v-model="state.startDate"
+                      class="p-2"
+                    />
                   </template>
                 </UPopover>
               </template>
             </UInputDate>
           </UFormField>
-          <UFormField name="dueDate" label="Due date" class="flex-1">
-            <UInputDate ref="dueDate" v-model="state.dueDate" size="sm">
+          <UFormField
+            name="dueDate"
+            label="Due date"
+            class="flex-1"
+          >
+            <UInputDate
+              ref="dueDate"
+              v-model="state.dueDate"
+              size="sm"
+            >
               <template #trailing>
                 <UPopover :reference="dueDate?.inputsRef[3]?.$el">
                   <UButton
@@ -232,13 +281,20 @@ function reset() {
                   />
 
                   <template #content>
-                    <UCalendar v-model="state.dueDate" class="p-2" />
+                    <UCalendar
+                      v-model="state.dueDate"
+                      class="p-2"
+                    />
                   </template>
                 </UPopover>
               </template>
             </UInputDate>
           </UFormField>
-          <UFormField name="labels" label="Labels" class="flex-1">
+          <UFormField
+            name="labels"
+            label="Labels"
+            class="flex-1"
+          >
             <USelectMenu
               v-model="state.labels"
               size="sm"

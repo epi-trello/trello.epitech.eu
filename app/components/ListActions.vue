@@ -27,8 +27,8 @@ const state = reactive<Partial<Schema>>({
 const isOpenEdit = ref(false)
 const isOpenDelete = ref(false)
 
-const items = ref<DropdownMenuItem[]>([
-  {
+const items = ref<DropdownMenuItem[][]>([
+  [{
     label: 'Edit',
     icon: 'i-ph-pencil-simple',
     onSelect: () => isOpenEdit.value = true
@@ -38,7 +38,7 @@ const items = ref<DropdownMenuItem[]>([
     icon: 'i-ph-trash',
     color: 'error',
     onSelect: () => isOpenDelete.value = true
-  }
+  }]
 ])
 
 const { add } = useToast()
@@ -109,7 +109,11 @@ async function deleteList(next?: () => void) {
     />
   </UDropdownMenu>
 
-  <UModal v-model:open="isOpenEdit" :title="`Edit ${list.title}`" @update:open="reset">
+  <UModal
+    v-model:open="isOpenEdit"
+    :title="`Edit ${list.title}`"
+    @update:open="reset"
+  >
     <template #body="{ close }">
       <UForm
         :schema="schema"
@@ -117,11 +121,26 @@ async function deleteList(next?: () => void) {
         class="space-y-4"
         @submit.prevent="onSubmitEdit($event, close)"
       >
-        <UFormField name="title" label="Title">
-          <UInput v-model="state.title" :placeholder="props.list.title" class="w-full" />
+        <UFormField
+          name="title"
+          label="Title"
+        >
+          <UInput
+            v-model="state.title"
+            :placeholder="props.list.title"
+            class="w-full"
+          />
         </UFormField>
-        <UFormField name="color" label="Color">
-          <USelect v-model="state.color" :items="colorItems" value-key="value" class="w-32">
+        <UFormField
+          name="color"
+          label="Color"
+        >
+          <USelect
+            v-model="state.color"
+            :items="colorItems"
+            value-key="value"
+            class="w-32"
+          >
             <template #leading="{ modelValue }">
               <div
                 class="size-5 rounded-full border-2"
@@ -147,7 +166,11 @@ async function deleteList(next?: () => void) {
     </template>
   </UModal>
 
-  <UModal v-model:open="isOpenDelete" :title="`Delete ${list.title}`" :ui="{ footer: 'justify-end' }">
+  <UModal
+    v-model:open="isOpenDelete"
+    :title="`Delete ${list.title}`"
+    :ui="{ footer: 'justify-end' }"
+  >
     <template #body>
       <p class="text-sm text-muted">
         Are you sure you want to delete this list? This action cannot be undone.
