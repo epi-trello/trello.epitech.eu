@@ -283,15 +283,77 @@ async function onListDrop(dropResult: any) {
     <UModal
       v-model:open="cardModalOpen"
       :title="selectedCard?.title ?? 'Carte'"
-      :ui="{ footer: 'justify-end' }"
+      :ui="{ footer: 'justify-end', body: 'p-0' }"
     >
       <template #body="{ close }">
-        <p v-if="selectedCard?.description" class="text-sm text-muted whitespace-pre-wrap">
-          {{ selectedCard.description }}
-        </p>
-        <p v-else class="text-sm text-muted italic">
-          Aucune description.
-        </p>
+        <div class="flex min-h-[200px]">
+          <div class="flex-1 p-5">
+            <p class="mb-2 text-xs font-medium uppercase tracking-wider text-muted">
+              Description
+            </p>
+            <p v-if="selectedCard?.description" class="text-sm text-muted whitespace-pre-wrap">
+              {{ selectedCard.description }}
+            </p>
+            <p v-else class="text-sm text-muted italic">
+              Aucune description.
+            </p>
+          </div>
+          <div class="w-56 shrink-0 border-l border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/50">
+            <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
+              Ajouter à la carte
+            </p>
+            <nav class="flex flex-col gap-1">
+              <UButton
+                variant="ghost"
+                color="neutral"
+                class="justify-start gap-2 rounded-lg bg-gray-100 px-3 py-2 text-left text-sm dark:bg-gray-800 dark:hover:bg-gray-700"
+              >
+                <UIcon name="i-ph-tag" class="size-4 shrink-0" />
+                <span>Étiquettes</span>
+              </UButton>
+              <UButton
+                variant="ghost"
+                color="neutral"
+                class="justify-start gap-2 rounded-lg bg-gray-100 px-3 py-2 text-left text-sm dark:bg-gray-800 dark:hover:bg-gray-700"
+              >
+                <UIcon name="i-ph-users-three" class="size-4 shrink-0" />
+                <span>Membres</span>
+              </UButton>
+              <UButton
+                variant="ghost"
+                color="neutral"
+                class="justify-start gap-2 rounded-lg bg-gray-100 px-3 py-2 text-left text-sm dark:bg-gray-800 dark:hover:bg-gray-700"
+              >
+                <UIcon name="i-ph-calendar" class="size-4 shrink-0" />
+                <span>Dates</span>
+              </UButton>
+              <UButton
+                variant="ghost"
+                color="neutral"
+                class="justify-start gap-2 rounded-lg bg-gray-100 px-3 py-2 text-left text-sm dark:bg-gray-800 dark:hover:bg-gray-700"
+              >
+                <UIcon name="i-ph-plus" class="size-4 shrink-0" />
+                <span>Ajouter une checklist</span>
+              </UButton>
+              <UButton
+                variant="ghost"
+                color="neutral"
+                class="justify-start gap-2 rounded-lg bg-gray-100 px-3 py-2 text-left text-sm dark:bg-gray-800 dark:hover:bg-gray-700"
+              >
+                <UIcon name="i-ph-paperclip" class="size-4 shrink-0" />
+                <span>Pièce jointe</span>
+              </UButton>
+              <UButton
+                variant="ghost"
+                color="neutral"
+                class="justify-start gap-2 rounded-lg bg-gray-100 px-3 py-2 text-left text-sm dark:bg-gray-800 dark:hover:bg-gray-700"
+              >
+                <UIcon name="i-ph-archive" class="size-4 shrink-0" />
+                <span>Archiver</span>
+              </UButton>
+            </nav>
+          </div>
+        </div>
       </template>
       <template #footer="{ close }">
         <UButton label="Fermer" @click="close()" />
