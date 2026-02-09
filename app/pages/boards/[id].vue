@@ -35,6 +35,14 @@ const state = reactive<Partial<Schema>>({
   color: 'GRAY'
 })
 
+const cardModalOpen = ref(false)
+const selectedCard = ref<{ title: string, description?: string | null } | null>(null)
+
+function openCardModal(card: { title: string, description?: string | null }) {
+  selectedCard.value = card
+  cardModalOpen.value = true
+}
+
 async function createList({ data }: FormSubmitEvent<Schema>, next?: () => void) {
   if (!board.value) return
 
@@ -271,6 +279,24 @@ async function onListDrop(dropResult: any) {
         </template>
       </UModal>
     </Teleport>
+
+    <UModal
+      v-model:open="cardModalOpen"
+      :title="selectedCard?.title ?? 'Carte'"
+      :ui="{ footer: 'justify-end' }"
+    >
+      <template #body="{ close }">
+        <p v-if="selectedCard?.description" class="text-sm text-muted whitespace-pre-wrap">
+          {{ selectedCard.description }}
+        </p>
+        <p v-else class="text-sm text-muted italic">
+          Aucune description.
+        </p>
+      </template>
+      <template #footer="{ close }">
+        <UButton label="Fermer" @click="close()" />
+      </template>
+    </UModal>
   </ClientOnly>
 
   <div class="flex-1 flex flex-col overflow-hidden">
@@ -348,8 +374,10 @@ async function onListDrop(dropResult: any) {
                 v-for="card in list.cards"
                 :key="card.id"
               >
-                <!-- <NuxtLink :to="`/boards/${board?.id}/cards/${card.id}`" :draggable="false"> -->
-                <UCard class="ring-inset mb-2">
+                <UCard
+                  class="ring-inset mb-2 cursor-pointer"
+                  @click="openCardModal(card)"
+                >
                   <p class="font-medium">
                     {{ card.title }}
                   </p>
@@ -372,7 +400,6 @@ async function onListDrop(dropResult: any) {
                     </UBadge>
                   </div>
                 </UCard>
-                <!-- </NuxtLink> -->
               </Draggable>
             </Container>
           </UCard>
