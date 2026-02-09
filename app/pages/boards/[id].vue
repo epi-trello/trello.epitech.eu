@@ -279,96 +279,6 @@ async function onListDrop(dropResult: any) {
         </template>
       </UModal>
     </Teleport>
-
-    <UModal
-      v-model:open="cardModalOpen"
-      :title="selectedCard?.title ?? 'Card'"
-      :ui="{
-        footer: 'justify-end',
-        body: 'p-0',
-        content: 'w-full max-w-4xl'
-      }"
-    >
-      <template #body="{ close }">
-        <div class="flex min-h-[280px] w-full min-w-0 max-w-4xl">
-          <div class="min-w-0 flex-1 overflow-y-auto px-8 py-8">
-            <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
-              Description
-            </p>
-            <p
-              v-if="selectedCard?.description"
-              class="leading-relaxed text-muted whitespace-pre-wrap"
-            >
-              {{ selectedCard.description }}
-            </p>
-            <p
-              v-else
-              class="leading-relaxed text-muted italic"
-            >
-              No description.
-            </p>
-          </div>
-          <div class="w-60 shrink-0 border-l border-gray-200 bg-gray-50/80 px-5 py-6 dark:border-gray-800 dark:bg-gray-900/40">
-            <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
-              Add to card
-            </p>
-            <nav class="flex flex-col gap-1.5">
-              <UButton
-                variant="ghost"
-                color="neutral"
-                class="justify-start gap-3 rounded-lg bg-white px-3 py-2.5 text-left text-sm shadow-sm transition-colors dark:bg-gray-800/80 dark:hover:bg-gray-700/80"
-              >
-                <UIcon name="i-ph-tag" class="size-4 shrink-0 text-muted" />
-                <span>Labels</span>
-              </UButton>
-              <UButton
-                variant="ghost"
-                color="neutral"
-                class="justify-start gap-3 rounded-lg bg-white px-3 py-2.5 text-left text-sm shadow-sm transition-colors dark:bg-gray-800/80 dark:hover:bg-gray-700/80"
-              >
-                <UIcon name="i-ph-users-three" class="size-4 shrink-0 text-muted" />
-                <span>Members</span>
-              </UButton>
-              <UButton
-                variant="ghost"
-                color="neutral"
-                class="justify-start gap-3 rounded-lg bg-white px-3 py-2.5 text-left text-sm shadow-sm transition-colors dark:bg-gray-800/80 dark:hover:bg-gray-700/80"
-              >
-                <UIcon name="i-ph-calendar" class="size-4 shrink-0 text-muted" />
-                <span>Dates</span>
-              </UButton>
-              <UButton
-                variant="ghost"
-                color="neutral"
-                class="justify-start gap-3 rounded-lg bg-white px-3 py-2.5 text-left text-sm shadow-sm transition-colors dark:bg-gray-800/80 dark:hover:bg-gray-700/80"
-              >
-                <UIcon name="i-ph-plus" class="size-4 shrink-0 text-muted" />
-                <span>Add a checklist</span>
-              </UButton>
-              <UButton
-                variant="ghost"
-                color="neutral"
-                class="justify-start gap-3 rounded-lg bg-white px-3 py-2.5 text-left text-sm shadow-sm transition-colors dark:bg-gray-800/80 dark:hover:bg-gray-700/80"
-              >
-                <UIcon name="i-ph-paperclip" class="size-4 shrink-0 text-muted" />
-                <span>Attachment</span>
-              </UButton>
-              <UButton
-                variant="ghost"
-                color="neutral"
-                class="justify-start gap-3 rounded-lg bg-white px-3 py-2.5 text-left text-sm shadow-sm transition-colors dark:bg-gray-800/80 dark:hover:bg-gray-700/80"
-              >
-                <UIcon name="i-ph-archive" class="size-4 shrink-0 text-muted" />
-                <span>Archive</span>
-              </UButton>
-            </nav>
-          </div>
-        </div>
-      </template>
-      <template #footer="{ close }">
-        <UButton label="Close" @click="close()" />
-      </template>
-    </UModal>
   </ClientOnly>
 
   <div class="flex-1 flex flex-col overflow-hidden">
@@ -446,32 +356,85 @@ async function onListDrop(dropResult: any) {
                 v-for="card in list.cards"
                 :key="card.id"
               >
-                <UCard
-                  class="ring-inset mb-2 cursor-pointer"
-                  @click="openCardModal(card)"
+                <UModal
+                  :title="card.title"
+                  :ui="{
+                    content: 'max-w-2xl'
+                  }"
                 >
-                  <p class="font-medium">
-                    {{ card.title }}
-                  </p>
-                  <div class="flex mt-1">
-                    <UBadge
-                      v-for="label in card.labels"
-                      :key="label.id"
-                      variant="outline"
-                      color="neutral"
-                      :label="label.name"
-                      size="sm"
-                      class="mr-1"
-                    >
-                      <template #leading>
-                        <span
-                          class="inline-block rounded-full size-2 shrink-0 ml-1"
-                          :style="{ backgroundColor: label.color }"
-                        />
-                      </template>
-                    </UBadge>
-                  </div>
-                </UCard>
+                  <UCard
+                    class="ring-inset mb-2 cursor-pointer"
+                  >
+                    <p class="font-medium">
+                      {{ card.title }}
+                    </p>
+                    <div class="flex mt-1">
+                      <UBadge
+                        v-for="label in card.labels"
+                        :key="label.id"
+                        variant="outline"
+                        color="neutral"
+                        :label="label.name"
+                        size="sm"
+                        class="mr-1"
+                      >
+                        <template #leading>
+                          <span
+                            class="inline-block rounded-full size-2 shrink-0 ml-1"
+                            :style="{ backgroundColor: label.color }"
+                          />
+                        </template>
+                      </UBadge>
+                    </div>
+                  </UCard>
+
+                  <template #body>
+                    <div class="flex w-full">
+                      <div class="w-full overflow-y-auto">
+                        <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
+                          Description
+                        </p>
+                        <p v-if="card.description" class="leading-relaxed whitespace-pre-wrap">
+                          {{ card.description }}
+                        </p>
+                        <p v-else class="text-sm italic text-muted">
+                          No description.
+                        </p>
+                      </div>
+                      <div class="w-50 shrink-0 border-l border-default pl-6 ml-6">
+                        <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
+                          Actions
+                        </p>
+                        <nav class="flex flex-col gap-1.5">
+                          <UButton
+                            variant="soft"
+                            color="neutral"
+                            icon="i-ph-tag"
+                            label="Labels"
+                          />
+                          <UButton
+                            variant="soft"
+                            color="neutral"
+                            icon="ph:calendar-blank"
+                            label="Start date"
+                          />
+                          <UButton
+                            variant="soft"
+                            color="neutral"
+                            icon="i-ph-calendar"
+                            label="Due date"
+                          />
+                          <UButton
+                            variant="soft"
+                            color="error"
+                            icon="i-ph-trash"
+                            label="Delete"
+                          />
+                        </nav>
+                      </div>
+                    </div>
+                  </template>
+                </UModal>
               </Draggable>
             </Container>
           </UCard>
