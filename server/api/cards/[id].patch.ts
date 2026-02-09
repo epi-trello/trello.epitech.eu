@@ -19,7 +19,14 @@ export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   const card = await prisma.card.update({
     where: { id, list: { board: { ownerId: session.user.id } } },
-    data
+    data: {
+      ...data,
+      labels: data.labels
+        ? {
+            set: data.labels.map(label => ({ id: label }))
+          }
+        : undefined
+    }
   })
 
   return card

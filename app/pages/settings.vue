@@ -119,8 +119,8 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
               class="px-6 py-4"
             >
               <UFileUpload
-                v-model="state.avatar"
                 v-slot="{ open }"
+                v-model="state.avatar"
                 variant="button"
                 icon="ph:user"
                 accept="image/*"
@@ -129,10 +129,10 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
                 <ClientOnly>
                   <UAvatar
                     :src="state.avatar
-                    ? createObjectUrl(state.avatar)
-                    : (user?.image ? getCacheBustedUrl(user.image) : undefined)"
-                    @click="open"
+                      ? createObjectUrl(state.avatar)
+                      : (user?.image ? getCacheBustedUrl(user.image) : undefined)"
                     class="size-full"
+                    @click="open"
                   />
 
                   <template #fallback>

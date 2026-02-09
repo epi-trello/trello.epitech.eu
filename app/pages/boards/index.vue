@@ -39,13 +39,13 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>, next?: () => void) {
 
     add({
       title: 'Board created',
-      description: "Your new board has been created successfully.",
+      description: 'Your new board has been created successfully.',
       color: 'success'
     })
   } catch (error: any) {
     add({
       color: 'error',
-      title: "Error while creating board",
+      title: 'Error while creating board',
       description: error.message
     })
   }
@@ -77,8 +77,11 @@ async function deleteBoard(boardId: string, next?: () => void) {
 
 <template>
   <ClientOnly>
-    <Teleport to="#navbar-actions">
-      <UModal title="Create a new board" @update:open="state.name = undefined">
+    <Teleport to="#navbar-right">
+      <UModal
+        title="Create a new board"
+        @update:open="state.name = undefined"
+      >
         <UButton
           icon="i-ph-plus"
           label="Create"
