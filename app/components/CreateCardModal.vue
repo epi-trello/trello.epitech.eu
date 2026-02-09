@@ -208,6 +208,8 @@ function reset() {
             v-model="state.listId"
             class="w-full max-w-36"
             placeholder="Select a list"
+            value-key="id"
+            label-key="label"
             :items="lists"
           >
             <template #leading="{ modelValue }">
