@@ -282,7 +282,7 @@ async function onListDrop(dropResult: any) {
 
     <UModal
       v-model:open="cardModalOpen"
-      :title="selectedCard?.title ?? 'Carte'"
+      :title="selectedCard?.title ?? 'Card'"
       :ui="{
         footer: 'justify-end',
         body: 'p-0',
@@ -305,12 +305,12 @@ async function onListDrop(dropResult: any) {
               v-else
               class="leading-relaxed text-muted italic"
             >
-              Aucune description.
+              No description.
             </p>
           </div>
           <div class="w-60 shrink-0 border-l border-gray-200 bg-gray-50/80 px-5 py-6 dark:border-gray-800 dark:bg-gray-900/40">
             <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
-              Ajouter à la carte
+              Add to card
             </p>
             <nav class="flex flex-col gap-1.5">
               <UButton
@@ -319,7 +319,7 @@ async function onListDrop(dropResult: any) {
                 class="justify-start gap-3 rounded-lg bg-white px-3 py-2.5 text-left text-sm shadow-sm transition-colors dark:bg-gray-800/80 dark:hover:bg-gray-700/80"
               >
                 <UIcon name="i-ph-tag" class="size-4 shrink-0 text-muted" />
-                <span>Étiquettes</span>
+                <span>Labels</span>
               </UButton>
               <UButton
                 variant="ghost"
@@ -327,7 +327,7 @@ async function onListDrop(dropResult: any) {
                 class="justify-start gap-3 rounded-lg bg-white px-3 py-2.5 text-left text-sm shadow-sm transition-colors dark:bg-gray-800/80 dark:hover:bg-gray-700/80"
               >
                 <UIcon name="i-ph-users-three" class="size-4 shrink-0 text-muted" />
-                <span>Membres</span>
+                <span>Members</span>
               </UButton>
               <UButton
                 variant="ghost"
@@ -343,7 +343,7 @@ async function onListDrop(dropResult: any) {
                 class="justify-start gap-3 rounded-lg bg-white px-3 py-2.5 text-left text-sm shadow-sm transition-colors dark:bg-gray-800/80 dark:hover:bg-gray-700/80"
               >
                 <UIcon name="i-ph-plus" class="size-4 shrink-0 text-muted" />
-                <span>Ajouter une checklist</span>
+                <span>Add a checklist</span>
               </UButton>
               <UButton
                 variant="ghost"
@@ -351,7 +351,7 @@ async function onListDrop(dropResult: any) {
                 class="justify-start gap-3 rounded-lg bg-white px-3 py-2.5 text-left text-sm shadow-sm transition-colors dark:bg-gray-800/80 dark:hover:bg-gray-700/80"
               >
                 <UIcon name="i-ph-paperclip" class="size-4 shrink-0 text-muted" />
-                <span>Pièce jointe</span>
+                <span>Attachment</span>
               </UButton>
               <UButton
                 variant="ghost"
@@ -359,14 +359,14 @@ async function onListDrop(dropResult: any) {
                 class="justify-start gap-3 rounded-lg bg-white px-3 py-2.5 text-left text-sm shadow-sm transition-colors dark:bg-gray-800/80 dark:hover:bg-gray-700/80"
               >
                 <UIcon name="i-ph-archive" class="size-4 shrink-0 text-muted" />
-                <span>Archiver</span>
+                <span>Archive</span>
               </UButton>
             </nav>
           </div>
         </div>
       </template>
       <template #footer="{ close }">
-        <UButton label="Fermer" @click="close()" />
+        <UButton label="Close" @click="close()" />
       </template>
     </UModal>
   </ClientOnly>
