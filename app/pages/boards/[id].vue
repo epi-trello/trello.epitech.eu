@@ -283,72 +283,82 @@ async function onListDrop(dropResult: any) {
     <UModal
       v-model:open="cardModalOpen"
       :title="selectedCard?.title ?? 'Carte'"
-      :ui="{ footer: 'justify-end', body: 'p-0' }"
+      :ui="{
+        footer: 'justify-end',
+        body: 'p-0',
+        content: 'w-full max-w-4xl'
+      }"
     >
       <template #body="{ close }">
-        <div class="flex min-h-[200px]">
-          <div class="flex-1 p-5">
-            <p class="mb-2 text-xs font-medium uppercase tracking-wider text-muted">
+        <div class="flex min-h-[280px] w-full min-w-0 max-w-4xl">
+          <div class="min-w-0 flex-1 overflow-y-auto px-8 py-8">
+            <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
               Description
             </p>
-            <p v-if="selectedCard?.description" class="text-sm text-muted whitespace-pre-wrap">
+            <p
+              v-if="selectedCard?.description"
+              class="leading-relaxed text-muted whitespace-pre-wrap"
+            >
               {{ selectedCard.description }}
             </p>
-            <p v-else class="text-sm text-muted italic">
+            <p
+              v-else
+              class="leading-relaxed text-muted italic"
+            >
               Aucune description.
             </p>
           </div>
-          <div class="w-56 shrink-0 border-l border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/50">
-            <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
+          <div class="w-60 shrink-0 border-l border-gray-200 bg-gray-50/80 px-5 py-6 dark:border-gray-800 dark:bg-gray-900/40">
+            <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
               Ajouter à la carte
             </p>
-            <nav class="flex flex-col gap-1">
+            <nav class="flex flex-col gap-1.5">
               <UButton
                 variant="ghost"
                 color="neutral"
-                class="justify-start gap-2 rounded-lg bg-gray-100 px-3 py-2 text-left text-sm dark:bg-gray-800 dark:hover:bg-gray-700"
+                class="justify-start gap-3 rounded-lg bg-white px-3 py-2.5 text-left text-sm shadow-sm transition-colors dark:bg-gray-800/80 dark:hover:bg-gray-700/80"
               >
-                <UIcon name="i-ph-tag" class="size-4 shrink-0" />
+                <UIcon name="i-ph-tag" class="size-4 shrink-0 text-muted" />
                 <span>Étiquettes</span>
               </UButton>
               <UButton
                 variant="ghost"
                 color="neutral"
-                class="justify-start gap-2 rounded-lg bg-gray-100 px-3 py-2 text-left text-sm dark:bg-gray-800 dark:hover:bg-gray-700"
+                class="justify-start gap-3 rounded-lg bg-white px-3 py-2.5 text-left text-sm shadow-sm transition-colors dark:bg-gray-800/80 dark:hover:bg-gray-700/80"
               >
-                <UIcon name="i-ph-users-three" class="size-4 shrink-0" />
+                <UIcon name="i-ph-users-three" class="size-4 shrink-0 text-muted" />
                 <span>Membres</span>
               </UButton>
               <UButton
                 variant="ghost"
                 color="neutral"
-                class="justify-start gap-2 rounded-lg bg-gray-100 px-3 py-2 text-left text-sm dark:bg-gray-800 dark:hover:bg-gray-700"
+                class="justify-start gap-3 rounded-lg bg-white px-3 py-2.5 text-left text-sm shadow-sm transition-colors dark:bg-gray-800/80 dark:hover:bg-gray-700/80"
               >
-                <UIcon name="i-ph-calendar" class="size-4 shrink-0" />
+                <UIcon name="i-ph-calendar" class="size-4 shrink-0 text-muted" />
                 <span>Dates</span>
               </UButton>
               <UButton
                 variant="ghost"
                 color="neutral"
-                class="justify-start gap-2 rounded-lg bg-gray-100 px-3 py-2 text-left text-sm dark:bg-gray-800 dark:hover:bg-gray-700"
+                class="justify-start gap-3 rounded-lg bg-white px-3 py-2.5 text-left text-sm shadow-sm transition-colors dark:bg-gray-800/80 dark:hover:bg-gray-700/80"
               >
-                <UIcon name="i-ph-plus" class="size-4 shrink-0" />
+                <UIcon name="i-ph-plus" class="size-4 shrink-0 text-muted" />
                 <span>Ajouter une checklist</span>
               </UButton>
               <UButton
                 variant="ghost"
                 color="neutral"
-                class="justify-start gap-2 rounded-lg bg-gray-100 px-3 py-2 text-left text-sm dark:bg-gray-800 dark:hover:bg-gray-700"
+                class="justify-start gap-3 rounded-lg bg-white px-3 py-2.5 text-left text-sm shadow-sm transition-colors dark:bg-gray-800/80 dark:hover:bg-gray-700/80"
               >
-                <UIcon name="i-ph-paperclip" class="size-4 shrink-0" />
+                <UIcon name="i-ph-paperclip" class="size-4 shrink-0 text-muted" />
                 <span>Pièce jointe</span>
               </UButton>
               <UButton
                 variant="ghost"
                 color="neutral"
-                class="justify-start gap-2 rounded-lg bg-gray-100 px-3 py-2 text-left text-sm dark:bg-gray-800 dark:hover:bg-gray-700"
+                class="justify-start gap-3 rounded-lg bg-white px-3 py-2.5 text-left text-sm shadow-sm transition-colors dark:bg-gray-800/80 dark:hover:bg-gray-700/80"
               >
-                <UIcon name="i-ph-archive" class="size-4 shrink-0" />
+                <UIcon name="i-ph-archive" class="size-4 shrink-0 text-muted" />
                 <span>Archiver</span>
               </UButton>
             </nav>
