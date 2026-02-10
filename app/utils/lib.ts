@@ -1,3 +1,5 @@
+import { CalendarDate } from '@internationalized/date'
+
 export function createObjectUrl(file: File) {
   return URL.createObjectURL(file)
 }
@@ -33,4 +35,15 @@ export const colorClasses: Record<string, string> = {
 
 export function getColors(color: string) {
   return colorClasses[color.toUpperCase()] || colorClasses.GRAY
+}
+
+export const randomHexColor = () =>
+  `#${Math.floor(Math.random() * 0xffffff)
+    .toString(16)
+    .padStart(6, '0')}`
+
+export function dateToCalendarDate(date: string): CalendarDate {
+  const d = new Date(date)
+
+  return new CalendarDate(d.getFullYear(), d.getMonth() + 1, d.getDate())
 }

@@ -44,16 +44,6 @@ const state = reactive<Partial<Schema>>({
   color: 'GRAY'
 })
 
-const cardModalOpen = ref(false)
-const selectedCard = ref<{ title: string; description?: string | null } | null>(
-  null
-)
-
-function openCardModal(card: { title: string; description?: string | null }) {
-  selectedCard.value = card
-  cardModalOpen.value = true
-}
-
 async function createList(
   { data }: FormSubmitEvent<Schema>,
   next?: () => void
@@ -301,13 +291,55 @@ async function onListDrop(dropResult: any) {
       icon="i-ph-cards-three"
       title="This board is empty"
       description="Start by adding lists and cards to organize your tasks."
-      :actions="[
-        {
-          label: 'Create a new list'
-        }
-      ]"
       class="flex-1 sm:p-0 lg:p-0 sm:pb-32 lg:pb-32"
-    />
+    >
+      <template #actions>
+        <UModal title="Create a new list">
+          <UButton icon="i-ph-plus" label="Create a new list" />
+
+          <template #body="{ close }">
+            <UForm
+              :schema="schema"
+              :state="state"
+              class="space-y-4"
+              @submit.prevent="createList($event, close)"
+            >
+              <UFormField name="title" label="Title">
+                <UInput
+                  v-model="state.title"
+                  placeholder="e.g. In progress"
+                  class="w-full"
+                />
+              </UFormField>
+              <UFormField name="color" label="Color">
+                <USelect
+                  v-model="state.color"
+                  :items="colorItems"
+                  value-key="value"
+                  class="w-32"
+                >
+                  <template #leading="{ modelValue }">
+                    <div
+                      class="size-5 rounded-full border-2"
+                      :class="getColors(modelValue!)"
+                    />
+                  </template>
+                  <template #item-leading="{ item }">
+                    <div
+                      class="size-5 rounded-full border-2"
+                      :class="getColors(item.value)"
+                    />
+                  </template>
+                </USelect>
+              </UFormField>
+              <div class="flex w-full justify-end">
+                <UButton type="submit" label="Create list" loading-auto />
+              </div>
+            </UForm>
+          </template>
+        </UModal>
+      </template>
+    </UEmpty>
 
     <div v-else class="flex flex-col flex-1 min-w-0 overflow-x-auto">
       <Container
@@ -357,11 +389,10 @@ async function onListDrop(dropResult: any) {
               @drop="onCardDrop(list.id, $event)"
             >
               <Draggable v-for="card in list.cards" :key="card.id">
-                <UModal
-                  :title="card.title"
-                  :ui="{
-                    content: 'max-w-2xl'
-                  }"
+                <CardModal
+                  :board-id="board.id"
+                  :cardId="card.id"
+                  @change="refresh"
                 >
                   <UCard class="ring-inset mb-2 cursor-pointer">
                     <p class="font-medium">
@@ -385,64 +416,29 @@ async function onListDrop(dropResult: any) {
                         </template>
                       </UBadge>
                     </div>
-                  </UCard>
-
-                  <template #body>
-                    <div class="flex w-full">
-                      <div class="w-full overflow-y-auto">
-                        <p
-                          class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted"
-                        >
-                          Description
-                        </p>
-                        <p
-                          v-if="card.description"
-                          class="leading-relaxed whitespace-pre-wrap"
-                        >
-                          {{ card.description }}
-                        </p>
-                        <p v-else class="text-sm italic text-muted">
-                          No description.
-                        </p>
-                      </div>
-                      <div
-                        class="w-50 shrink-0 border-l border-default pl-6 ml-6"
-                      >
-                        <p
-                          class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted"
-                        >
-                          Actions
-                        </p>
-                        <nav class="flex flex-col gap-1.5">
-                          <UButton
-                            variant="soft"
-                            color="neutral"
-                            icon="i-ph-tag"
-                            label="Labels"
-                          />
-                          <UButton
-                            variant="soft"
-                            color="neutral"
-                            icon="ph:calendar-blank"
-                            label="Start date"
-                          />
-                          <UButton
-                            variant="soft"
-                            color="neutral"
-                            icon="i-ph-calendar"
-                            label="Due date"
-                          />
-                          <UButton
-                            variant="soft"
-                            color="error"
-                            icon="i-ph-trash"
-                            label="Delete"
-                          />
-                        </nav>
-                      </div>
+                    <div
+                      v-if="card.dueDate"
+                      class="flex gap-1.5"
+                      :class="{
+                        'text-error': new Date(card.dueDate) <= new Date(),
+                        'text-warning':
+                          new Date(card.dueDate) > new Date() &&
+                          new Date(card.dueDate) <=
+                            new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                        'text-muted':
+                          new Date(card.dueDate) >
+                          new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+                      }"
+                    >
+                      <UIcon name="i-ph-alarm" size="xs" class="mt-2" />
+                      <NuxtTime
+                        :datetime="card.dueDate"
+                        locale="en-US"
+                        class="text-xs mt-2 block"
+                      />
                     </div>
-                  </template>
-                </UModal>
+                  </UCard>
+                </CardModal>
               </Draggable>
             </Container>
           </UCard>
