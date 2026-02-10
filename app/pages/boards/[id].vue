@@ -36,11 +36,61 @@ const state = reactive<Partial<Schema>>({
 })
 
 const cardModalOpen = ref(false)
-const selectedCard = ref<{ title: string, description?: string | null } | null>(null)
+const selectedCard = ref<{ id: string, title: string, description?: string | null } | null>(null)
+const cardEditDraft = ref({ title: '', description: '' })
 
-function openCardModal(card: { title: string, description?: string | null }) {
+function openCardModal(card: { id: string, title: string, description?: string | null }) {
   selectedCard.value = card
+  cardEditDraft.value = {
+    title: card.title,
+    description: card.description ?? ''
+  }
   cardModalOpen.value = true
+}
+
+async function deleteCard(cardId: string, close: () => void) {
+  try {
+    await $fetch(`/api/cards/${cardId}`, { method: 'DELETE' })
+    await refresh()
+    close()
+    add({
+      title: 'Card deleted',
+      color: 'success'
+    })
+  } catch (error: any) {
+    add({
+      color: 'error',
+      title: 'Error',
+      description: error?.data?.message ?? error?.message ?? 'Failed to delete the card'
+    })
+  }
+}
+
+async function updateCard(
+  cardId: string,
+  payload: { title: string, description?: string | null }
+) {
+  try {
+    await $fetch(`/api/cards/${cardId}`, {
+      method: 'PATCH',
+      body: {
+        title: payload.title,
+        description: payload.description ?? undefined
+      }
+    })
+    await refresh()
+    add({
+      title: 'Card updated',
+      color: 'success'
+    })
+    cardModalOpen.value = false
+  } catch (error: any) {
+    add({
+      color: 'error',
+      title: 'Error',
+      description: error?.data?.message ?? error?.message ?? 'Failed to update the card'
+    })
+  }
 }
 
 async function createList({ data }: FormSubmitEvent<Schema>, next?: () => void) {
@@ -279,6 +329,77 @@ async function onListDrop(dropResult: any) {
         </template>
       </UModal>
     </Teleport>
+
+    <UModal
+      v-model:open="cardModalOpen"
+      :title="cardEditDraft.title"
+      :ui="{ content: 'max-w-2xl' }"
+    >
+      <template #body="{ close }">
+        <div v-if="selectedCard" class="flex w-full gap-6">
+          <div class="min-w-0 flex-1 overflow-y-auto space-y-5">
+            <div>
+              <label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted">
+                Title
+              </label>
+              <UInput
+                v-model="cardEditDraft.title"
+                placeholder="Card title"
+                class="w-full"
+              />
+            </div>
+            <div>
+              <label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted">
+                Description
+              </label>
+              <UTextarea
+                v-model="cardEditDraft.description"
+                placeholder="Add a description..."
+                class="w-full min-h-[120px]"
+                autoresize
+              />
+            </div>
+            <UButton
+              label="Save"
+              color="primary"
+              @click="updateCard(selectedCard.id, { title: cardEditDraft.title, description: cardEditDraft.description || null })"
+            />
+          </div>
+          <div class="w-50 shrink-0 border-l border-default pl-6 ml-6">
+            <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
+              Actions
+            </p>
+            <nav class="flex flex-col gap-1.5">
+              <UButton
+                variant="soft"
+                color="neutral"
+                icon="i-ph-tag"
+                label="Labels"
+              />
+              <UButton
+                variant="soft"
+                color="neutral"
+                icon="ph:calendar-blank"
+                label="Start date"
+              />
+              <UButton
+                variant="soft"
+                color="neutral"
+                icon="i-ph-calendar"
+                label="Due date"
+              />
+              <UButton
+                variant="soft"
+                color="error"
+                icon="i-ph-trash"
+                label="Delete"
+                @click="deleteCard(selectedCard.id, close)"
+              />
+            </nav>
+          </div>
+        </div>
+      </template>
+    </UModal>
   </ClientOnly>
 
   <div class="flex-1 flex flex-col overflow-hidden">
@@ -356,85 +477,32 @@ async function onListDrop(dropResult: any) {
                 v-for="card in list.cards"
                 :key="card.id"
               >
-                <UModal
-                  :title="card.title"
-                  :ui="{
-                    content: 'max-w-2xl'
-                  }"
+                <UCard
+                  class="ring-inset mb-2 cursor-pointer"
+                  @click="openCardModal(card)"
                 >
-                  <UCard
-                    class="ring-inset mb-2 cursor-pointer"
-                  >
-                    <p class="font-medium">
-                      {{ card.title }}
-                    </p>
-                    <div class="flex mt-1">
-                      <UBadge
-                        v-for="label in card.labels"
-                        :key="label.id"
-                        variant="outline"
-                        color="neutral"
-                        :label="label.name"
-                        size="sm"
-                        class="mr-1"
-                      >
-                        <template #leading>
-                          <span
-                            class="inline-block rounded-full size-2 shrink-0 ml-1"
-                            :style="{ backgroundColor: label.color }"
-                          />
-                        </template>
-                      </UBadge>
-                    </div>
-                  </UCard>
-
-                  <template #body>
-                    <div class="flex w-full">
-                      <div class="w-full overflow-y-auto">
-                        <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
-                          Description
-                        </p>
-                        <p v-if="card.description" class="leading-relaxed whitespace-pre-wrap">
-                          {{ card.description }}
-                        </p>
-                        <p v-else class="text-sm italic text-muted">
-                          No description.
-                        </p>
-                      </div>
-                      <div class="w-50 shrink-0 border-l border-default pl-6 ml-6">
-                        <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
-                          Actions
-                        </p>
-                        <nav class="flex flex-col gap-1.5">
-                          <UButton
-                            variant="soft"
-                            color="neutral"
-                            icon="i-ph-tag"
-                            label="Labels"
-                          />
-                          <UButton
-                            variant="soft"
-                            color="neutral"
-                            icon="ph:calendar-blank"
-                            label="Start date"
-                          />
-                          <UButton
-                            variant="soft"
-                            color="neutral"
-                            icon="i-ph-calendar"
-                            label="Due date"
-                          />
-                          <UButton
-                            variant="soft"
-                            color="error"
-                            icon="i-ph-trash"
-                            label="Delete"
-                          />
-                        </nav>
-                      </div>
-                    </div>
-                  </template>
-                </UModal>
+                  <p class="font-medium">
+                    {{ card.title }}
+                  </p>
+                  <div class="flex mt-1">
+                    <UBadge
+                      v-for="label in card.labels"
+                      :key="label.id"
+                      variant="outline"
+                      color="neutral"
+                      :label="label.name"
+                      size="sm"
+                      class="mr-1"
+                    >
+                      <template #leading>
+                        <span
+                          class="inline-block rounded-full size-2 shrink-0 ml-1"
+                          :style="{ backgroundColor: label.color }"
+                        />
+                      </template>
+                    </UBadge>
+                  </div>
+                </UCard>
               </Draggable>
             </Container>
           </UCard>
