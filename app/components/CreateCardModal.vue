@@ -168,17 +168,8 @@ function reset() {
 </script>
 
 <template>
-  <UModal
-    title="New card"
-    :ui="{ footer: 'justify-end' }"
-    @update:open="reset"
-  >
-    <UButton
-      variant="ghost"
-      color="neutral"
-      icon="i-ph-plus"
-      size="sm"
-    />
+  <UModal title="New card" :ui="{ footer: 'justify-end' }" @update:open="reset">
+    <UButton variant="ghost" color="neutral" icon="i-ph-plus" size="sm" />
 
     <template #body="{ close }">
       <UForm

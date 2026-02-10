@@ -21,12 +21,14 @@ const features = ref<PageCardProps[]>([
   },
   {
     title: 'Multi-Module Hub',
-    description: 'One board for Minishell, another for MyRPG. Keep your semester organized.',
+    description:
+      'One board for Minishell, another for MyRPG. Keep your semester organized.',
     icon: 'i-ph-puzzle-piece'
   },
   {
     title: 'Deadline Tracking',
-    description: 'Never miss a deadline again. Set due dates on your cards and code with confidence.',
+    description:
+      'Never miss a deadline again. Set due dates on your cards and code with confidence.',
     icon: 'i-ph-alarm'
   }
 ])

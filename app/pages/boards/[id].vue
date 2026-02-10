@@ -44,7 +44,10 @@ const state = reactive<Partial<Schema>>({
   color: 'GRAY'
 })
 
-async function createList({ data }: FormSubmitEvent<Schema>, next?: () => void) {
+async function createList(
+  { data }: FormSubmitEvent<Schema>,
+  next?: () => void
+) {
   if (!board.value) return
 
   try {
@@ -292,62 +295,49 @@ async function onListDrop(dropResult: any) {
     >
       <template #actions>
         <UModal title="Create a new list">
-          <UButton
-            icon="i-ph-plus"
-            label="Create a new list"
-          />
+          <UButton icon="i-ph-plus" label="Create a new list" />
 
           <template #body="{ close }">
-          <UForm
-            :schema="schema"
-            :state="state"
-            class="space-y-4"
-            @submit.prevent="createList($event, close)"
-          >
-            <UFormField
-              name="title"
-              label="Title"
+            <UForm
+              :schema="schema"
+              :state="state"
+              class="space-y-4"
+              @submit.prevent="createList($event, close)"
             >
-              <UInput
-                v-model="state.title"
-                placeholder="e.g. In progress"
-                class="w-full"
-              />
-            </UFormField>
-            <UFormField
-              name="color"
-              label="Color"
-            >
-              <USelect
-                v-model="state.color"
-                :items="colorItems"
-                value-key="value"
-                class="w-32"
-              >
-                <template #leading="{ modelValue }">
-                  <div
-                    class="size-5 rounded-full border-2"
-                    :class="getColors(modelValue!)"
-                  />
-                </template>
-                <template #item-leading="{ item }">
-                  <div
-                    class="size-5 rounded-full border-2"
-                    :class="getColors(item.value)"
-                  />
-                </template>
-              </USelect>
-            </UFormField>
-            <div class="flex w-full justify-end">
-              <UButton
-                type="submit"
-                label="Create list"
-                loading-auto
-              />
-            </div>
-          </UForm>
-        </template>
-      </UModal>
+              <UFormField name="title" label="Title">
+                <UInput
+                  v-model="state.title"
+                  placeholder="e.g. In progress"
+                  class="w-full"
+                />
+              </UFormField>
+              <UFormField name="color" label="Color">
+                <USelect
+                  v-model="state.color"
+                  :items="colorItems"
+                  value-key="value"
+                  class="w-32"
+                >
+                  <template #leading="{ modelValue }">
+                    <div
+                      class="size-5 rounded-full border-2"
+                      :class="getColors(modelValue!)"
+                    />
+                  </template>
+                  <template #item-leading="{ item }">
+                    <div
+                      class="size-5 rounded-full border-2"
+                      :class="getColors(item.value)"
+                    />
+                  </template>
+                </USelect>
+              </UFormField>
+              <div class="flex w-full justify-end">
+                <UButton type="submit" label="Create list" loading-auto />
+              </div>
+            </UForm>
+          </template>
+        </UModal>
       </template>
     </UEmpty>
 
@@ -398,14 +388,13 @@ async function onListDrop(dropResult: any) {
               class="flex flex-col flex-1"
               @drop="onCardDrop(list.id, $event)"
             >
-              <Draggable
-                v-for="card in list.cards"
-                :key="card.id"
-              >
-                <CardModal :board-id="board.id" :cardId="card.id" @change="refresh">
-                  <UCard
-                    class="ring-inset mb-2 cursor-pointer"
-                  >
+              <Draggable v-for="card in list.cards" :key="card.id">
+                <CardModal
+                  :board-id="board.id"
+                  :cardId="card.id"
+                  @change="refresh"
+                >
+                  <UCard class="ring-inset mb-2 cursor-pointer">
                     <p class="font-medium">
                       {{ card.title }}
                     </p>
@@ -427,16 +416,21 @@ async function onListDrop(dropResult: any) {
                         </template>
                       </UBadge>
                     </div>
-                    <div v-if="card.dueDate" class="flex gap-1.5" :class="{
-                      'text-error': new Date(card.dueDate) <= new Date(),
-                      'text-warning': new Date(card.dueDate) > new Date() && new Date(card.dueDate) <= new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                      'text-muted': new Date(card.dueDate) > new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
-                    }">
-                      <UIcon
-                        name="i-ph-alarm"
-                        size="xs"
-                        class="mt-2"
-                      />
+                    <div
+                      v-if="card.dueDate"
+                      class="flex gap-1.5"
+                      :class="{
+                        'text-error': new Date(card.dueDate) <= new Date(),
+                        'text-warning':
+                          new Date(card.dueDate) > new Date() &&
+                          new Date(card.dueDate) <=
+                            new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                        'text-muted':
+                          new Date(card.dueDate) >
+                          new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+                      }"
+                    >
+                      <UIcon name="i-ph-alarm" size="xs" class="mt-2" />
                       <NuxtTime
                         :datetime="card.dueDate"
                         locale="en-US"

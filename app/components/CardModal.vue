@@ -15,18 +15,23 @@ const { add } = useToast()
 const { data: card, refresh } = await useFetch(`/api/cards/${props.cardId}`)
 
 const { data: labels } = await useFetch(`/api/boards/${props.boardId}/labels`, {
-  transform: data => data.map(label => ({
+  transform: (data) =>
+    data.map((label) => ({
+      value: label.id,
+      label: label.name,
+      color: label.color
+    }))
+})
+
+const selectedLabels = ref<
+  { value: string; label: string; color: string }[] | undefined
+>(
+  card.value?.labels.map((label) => ({
     value: label.id,
     label: label.name,
     color: label.color
   }))
-})
-
-const selectedLabels = ref<{ value: string, label: string, color: string }[] | undefined>(card.value?.labels.map(label => ({
-  value: label.id,
-  label: label.name,
-  color: label.color
-})))
+)
 
 const loadingLabel = ref(false)
 
@@ -54,10 +59,14 @@ async function onCreateLabel(item: string) {
 }
 
 async function setLabels() {
-  const currentLabelIds = card.value?.labels.map(label => label.id) || []
-  const selectedLabelIds = selectedLabels.value?.map(label => label.value) || []
+  const currentLabelIds = card.value?.labels.map((label) => label.id) || []
+  const selectedLabelIds =
+    selectedLabels.value?.map((label) => label.value) || []
 
-  if (JSON.stringify(currentLabelIds.sort()) === JSON.stringify(selectedLabelIds.sort())) {
+  if (
+    JSON.stringify(currentLabelIds.sort()) ===
+    JSON.stringify(selectedLabelIds.sort())
+  ) {
     return
   }
 
@@ -65,7 +74,7 @@ async function setLabels() {
     await $fetch(`/api/cards/${props.cardId}`, {
       method: 'PATCH',
       body: {
-        labels: selectedLabels.value?.map(label => label.value)
+        labels: selectedLabels.value?.map((label) => label.value)
       }
     })
 
@@ -101,7 +110,9 @@ async function setStartDate() {
 }
 
 const startDateRef = useTemplateRef('startDateRef')
-const startDate = shallowRef<CalendarDate | undefined>(card.value?.startDate ? dateToCalendarDate(card.value.startDate) : undefined)
+const startDate = shallowRef<CalendarDate | undefined>(
+  card.value?.startDate ? dateToCalendarDate(card.value.startDate) : undefined
+)
 
 async function setDueDate() {
   try {
@@ -124,7 +135,9 @@ async function setDueDate() {
 }
 
 const dueDateRef = useTemplateRef('dueDateRef')
-const dueDate = shallowRef<CalendarDate | undefined>(card.value?.dueDate ? dateToCalendarDate(card.value.dueDate) : undefined)
+const dueDate = shallowRef<CalendarDate | undefined>(
+  card.value?.dueDate ? dateToCalendarDate(card.value.dueDate) : undefined
+)
 
 const description = ref(card.value?.description || '')
 
@@ -189,25 +202,40 @@ async function setTitle() {
     <slot />
 
     <template #title>
-      <UInput color="neutral" variant="none" v-model.trim="title" size="xl" :ui="{ base: 'p-0' }" @blur="setTitle" />
+      <UInput
+        color="neutral"
+        variant="none"
+        v-model.trim="title"
+        size="xl"
+        :ui="{ base: 'p-0' }"
+        @blur="setTitle"
+      />
     </template>
 
     <template #body>
       <div class="flex w-full">
         <div class="w-full overflow-y-auto">
-          <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
+          <p
+            class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted"
+          >
             Description
           </p>
-          <UTextarea placeholder="Type something..." v-model.trim="description" autoresize class="w-full" @blur="setDescription" />
+          <UTextarea
+            placeholder="Type something..."
+            v-model.trim="description"
+            autoresize
+            class="w-full"
+            @blur="setDescription"
+          />
         </div>
         <div class="w-50 shrink-0 border-l border-default pl-6 ml-6">
-          <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
+          <p
+            class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted"
+          >
             Actions
           </p>
           <nav class="flex flex-col gap-1.5">
-            <label class="text-xs font-medium">
-              Labels
-            </label>
+            <label class="text-xs font-medium"> Labels </label>
             <USelectMenu
               v-model="selectedLabels"
               size="sm"
@@ -248,9 +276,7 @@ async function setTitle() {
                 <span class="ml-1">{{ item }}</span>
               </template>
             </USelectMenu>
-            <label class="text-xs font-medium">
-              Start Date
-            </label>
+            <label class="text-xs font-medium"> Start Date </label>
             <UInputDate
               ref="startDateRef"
               v-model="startDate"
@@ -278,9 +304,7 @@ async function setTitle() {
                 </UPopover>
               </template>
             </UInputDate>
-            <label class="text-xs font-medium">
-              Due Date
-            </label>
+            <label class="text-xs font-medium"> Due Date </label>
             <UInputDate
               ref="dueDateRef"
               v-model="dueDate"
