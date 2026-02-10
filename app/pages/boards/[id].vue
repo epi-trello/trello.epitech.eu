@@ -44,6 +44,104 @@ const selectedCard = ref<{
 } | null>(null)
 const cardEditDraft = ref({ title: '', description: '' })
 
+const labelsMenuOpen = ref(false)
+const boardLabels = ref<Array<{ id: string, name: string, color: string }>>([])
+const labelSearchQuery = ref('')
+const newLabelName = ref('')
+const newLabelColor = ref('#ef4444')
+
+const LABEL_COLORS = [
+  '#ef4444', '#f97316', '#eab308', '#22c55e',
+  '#0ea5e9', '#3b82f6', '#8b5cf6', '#6b7280'
+]
+
+const filteredBoardLabels = computed(() => {
+  const q = labelSearchQuery.value.trim().toLowerCase()
+  if (!q) return boardLabels.value
+  return boardLabels.value.filter(l => l.name.toLowerCase().includes(q))
+})
+
+function isLabelOnCard(labelId: string) {
+  return selectedCard.value?.labels?.some(l => l.id === labelId) ?? false
+}
+
+async function openLabelsMenu() {
+  labelsMenuOpen.value = true
+  labelSearchQuery.value = ''
+  newLabelName.value = ''
+  try {
+    const labels = await $fetch<typeof boardLabels.value>(`/api/boards/${params.id}/labels`)
+    boardLabels.value = labels ?? []
+  } catch {
+    boardLabels.value = []
+  }
+}
+
+function closeLabelsMenu() {
+  labelsMenuOpen.value = false
+}
+
+watch(cardModalOpen, (open) => {
+  if (!open) labelsMenuOpen.value = false
+})
+
+async function addLabelToCard(labelId: string) {
+  if (!selectedCard.value) return
+  try {
+    await $fetch(`/api/cards/${selectedCard.value.id}/labels/${labelId}`, { method: 'POST' })
+    const label = boardLabels.value.find(l => l.id === labelId)
+    if (label && selectedCard.value.labels) {
+      selectedCard.value.labels.push(label)
+    } else if (label) {
+      selectedCard.value.labels = [label]
+    }
+    await refresh()
+  } catch (error: any) {
+    add({
+      color: 'error',
+      title: 'Error',
+      description: error?.data?.message ?? error?.message ?? 'Failed to add label'
+    })
+  }
+}
+
+async function createBoardLabel() {
+  const name = newLabelName.value.trim()
+  if (!name || !selectedCard.value) return
+  try {
+    const label = await $fetch<{ id: string, name: string, color: string }>(`/api/boards/${params.id}/labels`, {
+      method: 'POST',
+      body: { name, color: newLabelColor.value, boardId: params.id }
+    })
+    boardLabels.value.push(label)
+    await addLabelToCard(label.id)
+    newLabelName.value = ''
+  } catch (error: any) {
+    add({
+      color: 'error',
+      title: 'Error',
+      description: error?.data?.message ?? error?.message ?? 'Failed to create label'
+    })
+  }
+}
+
+async function deleteBoardLabel(labelId: string) {
+  try {
+    await $fetch(`/api/labels/${labelId}`, { method: 'DELETE' })
+    boardLabels.value = boardLabels.value.filter(l => l.id !== labelId)
+    if (selectedCard.value?.labels) {
+      selectedCard.value.labels = selectedCard.value.labels.filter(l => l.id !== labelId)
+    }
+    await refresh()
+  } catch (error: any) {
+    add({
+      color: 'error',
+      title: 'Error',
+      description: error?.data?.message ?? error?.message ?? 'Failed to delete label'
+    })
+  }
+}
+
 function openCardModal(card: {
   id: string
   title: string
@@ -56,6 +154,21 @@ function openCardModal(card: {
     description: card.description ?? ''
   }
   cardModalOpen.value = true
+}
+
+async function removeLabelFromCard(cardId: string, labelId: string) {
+  if (!selectedCard.value?.labels) return
+  try {
+    await $fetch(`/api/cards/${cardId}/labels/${labelId}`, { method: 'DELETE' })
+    selectedCard.value.labels = selectedCard.value.labels.filter(l => l.id !== labelId)
+    await refresh()
+  } catch (error: any) {
+    add({
+      color: 'error',
+      title: 'Error',
+      description: error?.data?.message ?? error?.message ?? 'Failed to remove the label'
+    })
+  }
 }
 
 async function deleteCard(cardId: string, close: () => void) {
@@ -346,7 +459,124 @@ async function onListDrop(dropResult: any) {
       :ui="{ content: 'max-w-2xl' }"
     >
       <template #body="{ close }">
-        <div v-if="selectedCard" class="flex w-full gap-6">
+        <div v-if="selectedCard">
+          <!-- Labels menu panel -->
+          <div
+            v-if="labelsMenuOpen"
+            class="flex flex-col min-h-[320px]"
+          >
+            <div class="mb-4 flex items-center justify-between border-b border-default pb-3">
+              <UButton
+                icon="i-ph-arrow-left"
+                variant="ghost"
+                color="neutral"
+                size="sm"
+                aria-label="Back"
+                @click="closeLabelsMenu"
+              />
+              <span class="font-semibold">Labels</span>
+              <UButton
+                icon="i-ph-x"
+                variant="ghost"
+                color="neutral"
+                size="sm"
+                aria-label="Close"
+                @click="closeLabelsMenu"
+              />
+            </div>
+            <div class="space-y-4">
+              <div>
+                <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">
+                  Labels
+                </p>
+                <UInput
+                  v-model="labelSearchQuery"
+                  placeholder="Search for a label..."
+                  class="w-full"
+                />
+              </div>
+              <div>
+                <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">
+                  Available labels
+                </p>
+                <ul class="flex flex-col gap-1.5">
+                  <li
+                    v-for="label in filteredBoardLabels"
+                    :key="label.id"
+                    class="flex items-center justify-between gap-2 rounded-lg py-2 px-2 -mx-2 hover:bg-gray-100 dark:hover:bg-gray-800/50"
+                  >
+                    <span
+                      class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium text-white"
+                      :style="{ backgroundColor: label.color }"
+                    >
+                      {{ label.name }}
+                    </span>
+                    <div class="flex items-center gap-1">
+                      <UButton
+                        v-if="!isLabelOnCard(label.id)"
+                        icon="i-ph-plus"
+                        variant="ghost"
+                        color="neutral"
+                        size="xs"
+                        aria-label="Add to card"
+                        @click="addLabelToCard(label.id)"
+                      />
+                      <UIcon
+                        v-else
+                        name="i-ph-check"
+                        class="size-5 text-green-600 dark:text-green-400"
+                      />
+                      <UButton
+                        icon="i-ph-trash"
+                        variant="ghost"
+                        color="neutral"
+                        size="xs"
+                        aria-label="Delete label"
+                        @click="deleteBoardLabel(label.id)"
+                      />
+                    </div>
+                  </li>
+                  <p v-if="filteredBoardLabels.length === 0" class="text-sm text-muted py-2">
+                    No labels yet. Create one below.
+                  </p>
+                </ul>
+              </div>
+              <div>
+                <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">
+                  Create a label
+                </p>
+                <div class="flex gap-2">
+                  <UInput
+                    v-model="newLabelName"
+                    placeholder="Label name"
+                    class="flex-1"
+                    @keydown.enter.prevent="createBoardLabel()"
+                  />
+                  <UButton
+                    icon="i-ph-plus"
+                    variant="soft"
+                    color="neutral"
+                    @click="createBoardLabel()"
+                  />
+                </div>
+                <div class="mt-2 flex flex-wrap gap-2">
+                  <button
+                    v-for="color in LABEL_COLORS"
+                    :key="color"
+                    type="button"
+                    class="size-8 rounded border-2 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary"
+                    :class="newLabelColor === color ? 'border-primary scale-110' : 'border-transparent'"
+                    :style="{ backgroundColor: color }"
+                    :aria-label="`Color ${color}`"
+                    @click="newLabelColor = color"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Normal card content -->
+          <div v-else class="flex w-full gap-6">
           <div class="min-w-0 flex-1 overflow-y-auto space-y-5">
             <div>
               <label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted">
@@ -366,10 +596,18 @@ async function onListDrop(dropResult: any) {
                 <span
                   v-for="label in selectedCard.labels"
                   :key="label.id"
-                  class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium text-white"
+                  class="inline-flex items-center gap-1 rounded-full pl-3 pr-1 py-1 text-sm font-medium text-white"
                   :style="{ backgroundColor: label.color }"
                 >
-                  {{ label.name }}
+                  <span class="flex items-center justify-center">{{ label.name }}</span>
+                  <button
+                    type="button"
+                    class="flex size-5 shrink-0 items-center justify-center rounded-full transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-white/50"
+                    aria-label="Remove label"
+                    @click.stop="removeLabelFromCard(selectedCard.id, label.id)"
+                  >
+                    <UIcon name="i-ph-x" class="size-3.5" />
+                  </button>
                 </span>
               </div>
             </div>
@@ -400,6 +638,7 @@ async function onListDrop(dropResult: any) {
                 color="neutral"
                 icon="i-ph-tag"
                 label="Labels"
+                @click="openLabelsMenu()"
               />
               <UButton
                 variant="soft"
@@ -421,6 +660,7 @@ async function onListDrop(dropResult: any) {
                 @click="deleteCard(selectedCard.id, close)"
               />
             </nav>
+          </div>
           </div>
         </div>
       </template>
