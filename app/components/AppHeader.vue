@@ -1,10 +1,12 @@
 <script setup lang="ts">
 const { user } = useAuth()
 
-const items = computed(() => [{
-  label: 'Features',
-  to: '#features'
-}])
+const items = computed(() => [
+  {
+    label: 'Features',
+    to: '#features'
+  }
+])
 </script>
 
 <template>
@@ -16,11 +18,7 @@ const items = computed(() => [{
     </template>
 
     <template #right>
-      <UNavigationMenu
-        :items="items"
-        variant="link"
-        class="hidden lg:block"
-      />
+      <UNavigationMenu :items="items" variant="link" class="hidden lg:block" />
 
       <UButton
         v-if="user"

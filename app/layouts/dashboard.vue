@@ -82,18 +82,12 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
   <div class="flex">
     <UDashboardSidebar class="w-64">
       <template #header>
-        <NuxtLink
-          to="/"
-          class="inline-flex"
-        >
+        <NuxtLink to="/" class="inline-flex">
           <AppLogo class="h-5 w-auto shrink-0" />
         </NuxtLink>
       </template>
 
-      <UNavigationMenu
-        :items="navItems"
-        orientation="vertical"
-      />
+      <UNavigationMenu :items="navItems" orientation="vertical" />
 
       <template #footer>
         <ClientOnly>
@@ -146,7 +140,9 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
           <div id="navbar-left" />
 
           <ClientOnly>
-            <h1 class="flex items-center gap-1.5 font-semibold text-highlighted truncate">
+            <h1
+              class="flex items-center gap-1.5 font-semibold text-highlighted truncate"
+            >
               {{ title }}
             </h1>
 

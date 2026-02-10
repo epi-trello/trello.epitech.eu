@@ -78,14 +78,8 @@ async function deleteBoard(boardId: string, next?: () => void) {
 <template>
   <ClientOnly>
     <Teleport to="#navbar-right">
-      <UModal
-        title="Create a new board"
-        @update:open="state.name = undefined"
-      >
-        <UButton
-          icon="i-ph-plus"
-          label="Create"
-        />
+      <UModal title="Create a new board" @update:open="state.name = undefined">
+        <UButton icon="i-ph-plus" label="Create" />
 
         <template #body="{ close }">
           <UForm
@@ -94,10 +88,7 @@ async function deleteBoard(boardId: string, next?: () => void) {
             class="space-y-4"
             @submit.prevent="onSubmit($event, close)"
           >
-            <UFormField
-              label="Name"
-              name="name"
-            >
+            <UFormField label="Name" name="name">
               <UInput
                 v-model="state.name"
                 placeholder="e.g. Minishell"
@@ -106,11 +97,7 @@ async function deleteBoard(boardId: string, next?: () => void) {
             </UFormField>
 
             <div class="flex w-full justify-end">
-              <UButton
-                type="submit"
-                label="Create Board"
-                loading-auto
-              />
+              <UButton type="submit" label="Create Board" loading-auto />
             </div>
           </UForm>
         </template>
@@ -128,10 +115,7 @@ async function deleteBoard(boardId: string, next?: () => void) {
         icon="i-ph-kanban"
         class="group/card"
       >
-        <UModal
-          :title="`Delete ${board.name}`"
-          :ui="{ footer: 'justify-end' }"
-        >
+        <UModal :title="`Delete ${board.name}`" :ui="{ footer: 'justify-end' }">
           <UButton
             variant="link"
             color="neutral"
@@ -141,9 +125,8 @@ async function deleteBoard(boardId: string, next?: () => void) {
 
           <template #body>
             <p class="text-muted text-sm">
-              Deleting a board is irreversible.
-              All associated lists and cards will be permanently removed.
-              Are you sure you want to proceed?
+              Deleting a board is irreversible. All associated lists and cards
+              will be permanently removed. Are you sure you want to proceed?
             </p>
           </template>
 

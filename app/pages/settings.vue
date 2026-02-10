@@ -13,20 +13,29 @@ const title = usePageTitle()
 title.value = 'Settings'
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+const ACCEPTED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp'
+]
 
 const schema = z.object({
   avatar: z
     .instanceof(File, { error: 'Please select a file' })
-    .refine(file => file.size <= MAX_FILE_SIZE, {
+    .refine((file) => file.size <= MAX_FILE_SIZE, {
       error: 'File size must be less than 2MB'
     })
-    .refine(file => ACCEPTED_IMAGE_TYPES.includes(file.type), {
+    .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file.type), {
       error: 'Please upload a valid image file (JPEG, PNG, or WebP).'
     })
     .optional(),
-  firstname: z.string('First name is required').min(3, 'Must be at least 3 characters'),
-  lastname: z.string('Last name is required').min(3, 'Must be at least 3 characters')
+  firstname: z
+    .string('First name is required')
+    .min(3, 'Must be at least 3 characters'),
+  lastname: z
+    .string('Last name is required')
+    .min(3, 'Must be at least 3 characters')
 })
 
 type Schema = z.output<typeof schema>
@@ -83,29 +92,15 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
 
 <template>
   <UContainer class="py-8 max-w-3xl mx-auto space-y-4">
-    <h2 class="font-medium">
-      Account
-    </h2>
+    <h2 class="font-medium">Account</h2>
     <UCard :ui="{ body: 'p-0 sm:p-0' }">
-      <UForm
-        :schema="schema"
-        :state="state"
-        @submit.prevent="onSubmit"
-      >
+      <UForm :schema="schema" :state="state" @submit.prevent="onSubmit">
         <div class="flex">
           <div class="flex-1">
-            <UFormField
-              label="First name"
-              name="firstname"
-              class="px-6 py-4"
-            >
+            <UFormField label="First name" name="firstname" class="px-6 py-4">
               <UInput v-model="state.firstname" />
             </UFormField>
-            <UFormField
-              label="Last name"
-              name="lastname"
-              class="px-6 py-4"
-            >
+            <UFormField label="Last name" name="lastname" class="px-6 py-4">
               <UInput v-model="state.lastname" />
             </UFormField>
           </div>
@@ -128,9 +123,13 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
               >
                 <ClientOnly>
                   <UAvatar
-                    :src="state.avatar
-                      ? createObjectUrl(state.avatar)
-                      : (user?.image ? getCacheBustedUrl(user.image) : undefined)"
+                    :src="
+                      state.avatar
+                        ? createObjectUrl(state.avatar)
+                        : user?.image
+                          ? getCacheBustedUrl(user.image)
+                          : undefined
+                    "
                     class="size-full"
                     @click="open"
                   />
@@ -149,19 +148,19 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
             label="Save Changes"
             size="xs"
             loading-auto
-            :disabled="user?.firstname === state.firstname && user?.lastname === state.lastname && !state.avatar"
+            :disabled="
+              user?.firstname === state.firstname &&
+              user?.lastname === state.lastname &&
+              !state.avatar
+            "
           />
         </div>
       </UForm>
     </UCard>
-    <h2 class="font-medium">
-      Appearance
-    </h2>
+    <h2 class="font-medium">Appearance</h2>
     <UCard>
       <div class="flex items-center justify-between">
-        <p class="text-sm">
-          Theme preferences
-        </p>
+        <p class="text-sm">Theme preferences</p>
         <UColorModeSelect />
       </div>
     </UCard>

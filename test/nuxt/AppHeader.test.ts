@@ -71,7 +71,7 @@ describe('AppHeader', () => {
   describe('when user IS authenticated', () => {
     const fakeUser = { id: 1, name: 'Mathieu' }
 
-    it ('renders a link to the dashboard', async () => {
+    it('renders a link to the dashboard', async () => {
       const wrapper = await mountHeader(fakeUser)
       const link = wrapper.find('a[href="/boards"]')
 

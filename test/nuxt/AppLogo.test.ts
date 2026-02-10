@@ -29,7 +29,13 @@ describe('AppLogo Component', () => {
     const container = wrapper.find('div')
 
     expect(container.classes()).toEqual(
-      expect.arrayContaining(['flex', 'items-center', 'gap-2', 'text-lg', 'font-semibold'])
+      expect.arrayContaining([
+        'flex',
+        'items-center',
+        'gap-2',
+        'text-lg',
+        'font-semibold'
+      ])
     )
   })
 })

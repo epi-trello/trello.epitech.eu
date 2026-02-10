@@ -22,7 +22,10 @@ describe('getColors', () => {
     expect(getColors('')).toBe(colorClasses.GRAY)
   })
 
-  it.each(Object.keys(colorClasses))('should correctly retrieve %s', (colorKey) => {
-    expect(getColors(colorKey)).toBe(colorClasses[colorKey])
-  })
+  it.each(Object.keys(colorClasses))(
+    'should correctly retrieve %s',
+    (colorKey) => {
+      expect(getColors(colorKey)).toBe(colorClasses[colorKey])
+    }
+  )
 })

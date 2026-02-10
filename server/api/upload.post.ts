@@ -17,11 +17,15 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const { url } = await put(`avatars/${session.user.id}.${image.name.split('.').pop()}`, image, {
-    access: 'public',
-    contentType: image.type,
-    allowOverwrite: true
-  })
+  const { url } = await put(
+    `avatars/${session.user.id}.${image.name.split('.').pop()}`,
+    image,
+    {
+      access: 'public',
+      contentType: image.type,
+      allowOverwrite: true
+    }
+  )
 
   return { url }
 })

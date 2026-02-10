@@ -20,11 +20,14 @@ export const colorItems = [
 export const colorClasses: Record<string, string> = {
   GRAY: 'bg-gray-200 dark:bg-gray-800 border-gray-400 dark:border-gray-600',
   RED: 'bg-red-200 dark:bg-red-900 border-red-400 dark:border-red-600',
-  YELLOW: 'bg-yellow-200 dark:bg-yellow-900 border-yellow-400 dark:border-yellow-600',
-  GREEN: 'bg-green-200 dark:bg-green-900 border-green-400 dark:border-green-600',
+  YELLOW:
+    'bg-yellow-200 dark:bg-yellow-900 border-yellow-400 dark:border-yellow-600',
+  GREEN:
+    'bg-green-200 dark:bg-green-900 border-green-400 dark:border-green-600',
   SKY: 'bg-sky-200 dark:bg-sky-900 border-sky-400 dark:border-sky-600',
   BLUE: 'bg-blue-200 dark:bg-blue-900 border-blue-400 dark:border-blue-600',
-  VIOLET: 'bg-violet-200 dark:bg-violet-900 border-violet-400 dark:border-violet-600',
+  VIOLET:
+    'bg-violet-200 dark:bg-violet-900 border-violet-400 dark:border-violet-600',
   PINK: 'bg-pink-200 dark:bg-pink-900 border-pink-400 dark:border-pink-600'
 }
 
