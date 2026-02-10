@@ -184,17 +184,61 @@ To create/update schema in dev: `pnpm db:push`. For versioned migrations, config
 
 ---
 
-## 10. Conventions and practices
+## 10. Deployment (Vercel and Prisma Data Platform)
+
+The application is designed to be deployed on **Vercel** with the database hosted on **Prisma Data Platform** (PostgreSQL).
+
+### Vercel
+
+- **Hosting**: The Nuxt app is deployed as a serverless application on Vercel. Connect the Git repository to Vercel; the build command is `pnpm build` (or `nuxt build`), with `pnpm install` for dependencies.
+- **Environment**: Set `DATABASE_URL` (and any other secrets) in the Vercel project settings (Environment Variables). Use the same variable for Production, Preview, and optionally Development if you use Vercel for local env.
+- **Server API**: `server/api/` routes run as Vercel serverless functions; no extra configuration is required for Nuxt.
+- **Storage**: Uploads use **Vercel Blob** (`@vercel/blob`) in `server/api/upload.post.ts`; configure the Blob store in the Vercel project and set the required env vars (e.g. `BLOB_READ_WRITE_TOKEN` if used).
+
+### Prisma Data Platform
+
+- **Database**: PostgreSQL is provisioned and managed via [Prisma Data Platform](https://prisma.io/data-platform). Create a project, provision a database, and copy the connection string.
+- **Connection**: Use the provided connection URL as `DATABASE_URL`. The project uses the Prisma **Pg** driver adapter (`@prisma/adapter-pg`) with the `pg` package, which is compatible with Prisma Data Platform’s PostgreSQL.
+- **Schema**: Apply the schema with `pnpm db:push` (or via CI/deploy scripts). For production, you can run migrations or `db:push` as part of your deployment or in a separate step with a dedicated script.
+
+---
+
+## 11. CI/CD and quality gates
+
+### Git hooks (Husky + Commitlint)
+
+- **Husky** runs Git hooks. After `pnpm install`, the `prepare` script runs `husky` to install them.
+- **Commit message (Commitlint)**  
+  - Hook: `.husky/commit-msg` runs `commitlint --edit $1`.  
+  - Config: `.commitlintrc.json` extends `@commitlint/config-conventional`.  
+  - Commits must follow the [Conventional Commits](https://www.conventionalcommits.org/) format (e.g. `feat: add board filters`, `fix: card drag on mobile`). Invalid messages cause the commit to be rejected.
+- **Pre-commit**  
+  - Hook: `.husky/pre-commit` runs `lint-staged`.  
+  - Only staged files are checked. This typically runs formatting (e.g. Prettier) and optionally lint, so code is formatted and linted before each commit.
+
+### Linting
+
+- **Formatting**: `pnpm lint` runs Prettier in check mode; `pnpm lint:fix` applies fixes. Use these in CI to enforce style.
+- **TypeScript**: `pnpm typecheck` runs `nuxt typecheck`. Recommended in CI to catch type errors before merge.
+
+### Vercel preview deployments
+
+- **Per-branch previews**: For each push to a branch (e.g. `feat/xxx`, `fix/yyy`), Vercel automatically builds and deploys a **Preview** URL. The main branch usually maps to **Production**.
+- **Usage**: Share the Preview link from the Vercel dashboard or from the PR to test changes before merging. Ensure `DATABASE_URL` (and other env vars) are set for Preview environments if the preview app must use a real database (e.g. a shared staging DB or a branch-specific DB).
+
+---
+
+## 12. Conventions and practices
 
 - **Validation**: Zod for all API bodies via `readValidatedBody` and schemas in `server/utils/schema.ts`.
 - **Auth**: session checked in every protected handler; ownership verified (ownerId or board.ownerId relation).
 - **IDs**: generated on server with `generateId()` (better-auth) for Board, List, Card, Label.
 - **Position**: Float for lists/cards; reorder logic (gap, midpoint between positions) on the board page.
-- **Format**: Prettier + (optional) Commitlint / Husky for commits and lint.
+- **Format**: Prettier; commits and pre-commit checks are enforced via Husky + Commitlint + lint-staged (see § 11).
 
 ---
 
-## 11. Quick troubleshooting
+## 13. Quick troubleshooting
 
 - **Prisma error / "can't find module"**: run `pnpm db:generate` (or `pnpm install`, which runs `prisma generate`).
 - **401 on API**: ensure the user is logged in and cookies are sent (same origin, credentials).
