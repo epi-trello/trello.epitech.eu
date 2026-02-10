@@ -35,6 +35,14 @@ const state = reactive<Partial<Schema>>({
   color: 'GRAY'
 })
 
+const cardModalOpen = ref(false)
+const selectedCard = ref<{ title: string, description?: string | null } | null>(null)
+
+function openCardModal(card: { title: string, description?: string | null }) {
+  selectedCard.value = card
+  cardModalOpen.value = true
+}
+
 async function createList({ data }: FormSubmitEvent<Schema>, next?: () => void) {
   if (!board.value) return
 
@@ -348,31 +356,85 @@ async function onListDrop(dropResult: any) {
                 v-for="card in list.cards"
                 :key="card.id"
               >
-                <!-- <NuxtLink :to="`/boards/${board?.id}/cards/${card.id}`" :draggable="false"> -->
-                <UCard class="ring-inset mb-2">
-                  <p class="font-medium">
-                    {{ card.title }}
-                  </p>
-                  <div class="flex mt-1">
-                    <UBadge
-                      v-for="label in card.labels"
-                      :key="label.id"
-                      variant="outline"
-                      color="neutral"
-                      :label="label.name"
-                      size="sm"
-                      class="mr-1"
-                    >
-                      <template #leading>
-                        <span
-                          class="inline-block rounded-full size-2 shrink-0 ml-1"
-                          :style="{ backgroundColor: label.color }"
-                        />
-                      </template>
-                    </UBadge>
-                  </div>
-                </UCard>
-                <!-- </NuxtLink> -->
+                <UModal
+                  :title="card.title"
+                  :ui="{
+                    content: 'max-w-2xl'
+                  }"
+                >
+                  <UCard
+                    class="ring-inset mb-2 cursor-pointer"
+                  >
+                    <p class="font-medium">
+                      {{ card.title }}
+                    </p>
+                    <div class="flex mt-1">
+                      <UBadge
+                        v-for="label in card.labels"
+                        :key="label.id"
+                        variant="outline"
+                        color="neutral"
+                        :label="label.name"
+                        size="sm"
+                        class="mr-1"
+                      >
+                        <template #leading>
+                          <span
+                            class="inline-block rounded-full size-2 shrink-0 ml-1"
+                            :style="{ backgroundColor: label.color }"
+                          />
+                        </template>
+                      </UBadge>
+                    </div>
+                  </UCard>
+
+                  <template #body>
+                    <div class="flex w-full">
+                      <div class="w-full overflow-y-auto">
+                        <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
+                          Description
+                        </p>
+                        <p v-if="card.description" class="leading-relaxed whitespace-pre-wrap">
+                          {{ card.description }}
+                        </p>
+                        <p v-else class="text-sm italic text-muted">
+                          No description.
+                        </p>
+                      </div>
+                      <div class="w-50 shrink-0 border-l border-default pl-6 ml-6">
+                        <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
+                          Actions
+                        </p>
+                        <nav class="flex flex-col gap-1.5">
+                          <UButton
+                            variant="soft"
+                            color="neutral"
+                            icon="i-ph-tag"
+                            label="Labels"
+                          />
+                          <UButton
+                            variant="soft"
+                            color="neutral"
+                            icon="ph:calendar-blank"
+                            label="Start date"
+                          />
+                          <UButton
+                            variant="soft"
+                            color="neutral"
+                            icon="i-ph-calendar"
+                            label="Due date"
+                          />
+                          <UButton
+                            variant="soft"
+                            color="error"
+                            icon="i-ph-trash"
+                            label="Delete"
+                          />
+                        </nav>
+                      </div>
+                    </div>
+                  </template>
+                </UModal>
               </Draggable>
             </Container>
           </UCard>
