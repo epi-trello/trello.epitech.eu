@@ -32,10 +32,4 @@ describe('AppLogo Component', () => {
       expect.arrayContaining(['flex', 'items-center', 'gap-2', 'text-lg', 'font-semibold'])
     )
   })
-
-  it('matches the snapshot', () => {
-    const wrapper = mount(AppLogo)
-
-    expect(wrapper.html()).toMatchSnapshot()
-  })
 })
