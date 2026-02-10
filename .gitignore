@@ -28,3 +28,5 @@ prisma/generated
 
 .vercel
 .env*.local
+
+**/__snapshots__/**
