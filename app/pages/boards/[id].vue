@@ -36,10 +36,20 @@ const state = reactive<Partial<Schema>>({
 })
 
 const cardModalOpen = ref(false)
-const selectedCard = ref<{ id: string, title: string, description?: string | null } | null>(null)
+const selectedCard = ref<{
+  id: string
+  title: string
+  description?: string | null
+  labels?: Array<{ id: string, name: string, color: string }>
+} | null>(null)
 const cardEditDraft = ref({ title: '', description: '' })
 
-function openCardModal(card: { id: string, title: string, description?: string | null }) {
+function openCardModal(card: {
+  id: string
+  title: string
+  description?: string | null
+  labels?: Array<{ id: string, name: string, color: string }>
+}) {
   selectedCard.value = card
   cardEditDraft.value = {
     title: card.title,
@@ -347,6 +357,21 @@ async function onListDrop(dropResult: any) {
                 placeholder="Card title"
                 class="w-full"
               />
+            </div>
+            <div v-if="selectedCard.labels?.length" class="space-y-2">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-muted">
+                Labels
+              </label>
+              <div class="flex flex-wrap gap-2">
+                <span
+                  v-for="label in selectedCard.labels"
+                  :key="label.id"
+                  class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium text-white"
+                  :style="{ backgroundColor: label.color }"
+                >
+                  {{ label.name }}
+                </span>
+              </div>
             </div>
             <div>
               <label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted">
