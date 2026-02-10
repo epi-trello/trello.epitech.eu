@@ -20,13 +20,13 @@ const features = ref<PageCardProps[]>([
   },
   {
     title: 'Multi-Module Hub',
-    description: 'One workspace for Minishell, another for MyRPG. Create dedicated boards for every module of the curriculum and keep your semester organized.',
+    description: 'One board for Minishell, another for MyRPG. Keep your semester organized.',
     icon: 'i-ph-puzzle-piece'
   },
   {
-    title: 'Group Assignment',
-    description: 'Working in a binôme, trinôme or even more? Assign cards to specific members so everyone knows exactly what to code next. No more confusion.',
-    icon: 'i-ph-users-three'
+    title: 'Deadline Tracking',
+    description: 'Never miss a deadline again. Set due dates on your cards and code with confidence.',
+    icon: 'i-ph-alarm'
   }
 ])
 </script>

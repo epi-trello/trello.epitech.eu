@@ -62,13 +62,6 @@ const { data: labels, refresh } = await useFetch(`/api/boards/${props.boardId}/l
   }))
 })
 
-const randomHexColor = () =>
-  `#${Math.floor(Math.random() * 0xffffff)
-    .toString(16)
-    .padStart(6, '0')}`
-
-const labelColor = ref(randomHexColor())
-
 async function onSubmit({ data }: FormSubmitEvent<Schema>, next?: () => void) {
   try {
     const list = lists.value?.find(l => l.id === data.listId)
@@ -161,6 +154,7 @@ function reset() {
   <UModal
     title="New card"
     :ui="{ footer: 'justify-end' }"
+    @update:open="reset"
   >
     <UButton
       variant="ghost"
@@ -333,10 +327,6 @@ function reset() {
 
               <template #create-item-label="{ item }">
                 <span>Create label</span>
-                <span
-                  class="inline-block rounded-full size-2 shrink-0 ml-1"
-                  :style="{ backgroundColor: labelColor }"
-                />
                 <span class="ml-1">{{ item }}</span>
               </template>
             </USelectMenu>
