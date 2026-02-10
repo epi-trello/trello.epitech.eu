@@ -49,3 +49,20 @@ jobs:
 
       - name: Lint
         run: pnpm lint
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6.0.1
+      - uses: pnpm/action-setup@v4.2.0
+      - uses: actions/setup-node@v6.1.0
+        with:
+          node-version: lts/*
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run tests
+        run: pnpm test
