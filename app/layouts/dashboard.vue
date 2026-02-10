@@ -80,7 +80,7 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
 
 <template>
   <div class="flex">
-    <UDashboardSidebar class="w-64">
+    <UDashboardSidebar class="w-64" data-tour="sidebar">
       <template #header>
         <NuxtLink to="/" class="inline-flex">
           <AppLogo class="h-5 w-auto shrink-0" />
@@ -153,6 +153,7 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
         </template>
 
         <template #right>
+          <TourTrigger class="mr-2" />
           <div id="navbar-right" />
         </template>
       </UDashboardNavbar>
