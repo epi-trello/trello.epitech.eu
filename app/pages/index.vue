@@ -15,7 +15,8 @@ const links = ref([
 const features = ref<PageCardProps[]>([
   {
     title: 'Visual Workflow',
-    description: 'Stop managing projects in TODO.txt. Visualize your roadmap, drag tasks from "To Do" to "Done", and get a clear view of your progress at a glance.',
+    description:
+      'Stop managing projects in TODO.txt. Visualize your roadmap, drag tasks from "To Do" to "Done", and get a clear view of your progress at a glance.',
     icon: 'i-ph-cards-three'
   },
   {

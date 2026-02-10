@@ -1,9 +1,9 @@
 import { defu } from 'defu'
 
-type MiddlewareOptions
-  = | false
-    | {
-    /**
+type MiddlewareOptions =
+  | false
+  | {
+      /**
        * Only apply auth middleware to guest or user
        */
       only?: 'guest' | 'user'

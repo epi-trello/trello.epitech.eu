@@ -14,7 +14,16 @@ const props = defineProps<{
 
 const schema = z.object({
   title: z.string('Title is required').min(1, 'Title is required'),
-  color: z.enum(['GRAY', 'RED', 'YELLOW', 'GREEN', 'SKY', 'BLUE', 'VIOLET', 'PINK'])
+  color: z.enum([
+    'GRAY',
+    'RED',
+    'YELLOW',
+    'GREEN',
+    'SKY',
+    'BLUE',
+    'VIOLET',
+    'PINK'
+  ])
 })
 
 type Schema = z.output<typeof schema>
@@ -28,17 +37,19 @@ const isOpenEdit = ref(false)
 const isOpenDelete = ref(false)
 
 const items = ref<DropdownMenuItem[][]>([
-  [{
-    label: 'Edit',
-    icon: 'i-ph-pencil-simple',
-    onSelect: () => isOpenEdit.value = true
-  },
-  {
-    label: 'Delete',
-    icon: 'i-ph-trash',
-    color: 'error',
-    onSelect: () => isOpenDelete.value = true
-  }]
+  [
+    {
+      label: 'Edit',
+      icon: 'i-ph-pencil-simple',
+      onSelect: () => (isOpenEdit.value = true)
+    },
+    {
+      label: 'Delete',
+      icon: 'i-ph-trash',
+      color: 'error',
+      onSelect: () => (isOpenDelete.value = true)
+    }
+  ]
 ])
 
 const { add } = useToast()
@@ -48,7 +59,10 @@ function reset() {
   state.color = props.list.color as Schema['color']
 }
 
-async function onSubmitEdit({ data }: FormSubmitEvent<Schema>, next?: () => void) {
+async function onSubmitEdit(
+  { data }: FormSubmitEvent<Schema>,
+  next?: () => void
+) {
   try {
     await $fetch(`/api/lists/${props.list.id}`, {
       method: 'PATCH',
@@ -101,12 +115,7 @@ async function deleteList(next?: () => void) {
 
 <template>
   <UDropdownMenu :items="items">
-    <UButton
-      variant="ghost"
-      color="neutral"
-      icon="i-ph-dots-three"
-      size="sm"
-    />
+    <UButton variant="ghost" color="neutral" icon="i-ph-dots-three" size="sm" />
   </UDropdownMenu>
 
   <UModal
@@ -121,20 +130,14 @@ async function deleteList(next?: () => void) {
         class="space-y-4"
         @submit.prevent="onSubmitEdit($event, close)"
       >
-        <UFormField
-          name="title"
-          label="Title"
-        >
+        <UFormField name="title" label="Title">
           <UInput
             v-model="state.title"
             :placeholder="props.list.title"
             class="w-full"
           />
         </UFormField>
-        <UFormField
-          name="color"
-          label="Color"
-        >
+        <UFormField name="color" label="Color">
           <USelect
             v-model="state.color"
             :items="colorItems"
@@ -156,11 +159,7 @@ async function deleteList(next?: () => void) {
           </USelect>
         </UFormField>
         <div class="flex w-full justify-end">
-          <UButton
-            type="submit"
-            label="Edit"
-            loading-auto
-          />
+          <UButton type="submit" label="Edit" loading-auto />
         </div>
       </UForm>
     </template>
@@ -177,12 +176,7 @@ async function deleteList(next?: () => void) {
       </p>
     </template>
     <template #footer="{ close }">
-      <UButton
-        variant="link"
-        color="neutral"
-        label="Cancel"
-        @click="close()"
-      />
+      <UButton variant="link" color="neutral" label="Cancel" @click="close()" />
       <UButton
         color="error"
         label="Delete"

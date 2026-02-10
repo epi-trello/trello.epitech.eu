@@ -47,10 +47,7 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UPage
-    class="h-screen"
-    :ui="{ center: 'flex flex-col' }"
-  >
+  <UPage class="h-screen" :ui="{ center: 'flex flex-col' }">
     <UPageBody class="relative flex items-center flex-1">
       <ULink
         to="/"
@@ -60,35 +57,21 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
         Go back
       </ULink>
       <UContainer class="flex flex-col items-center">
-        <NuxtLink
-          to="/"
-          class="mb-8"
-        >
+        <NuxtLink to="/" class="mb-8">
           <AppLogo class="w-auto" />
         </NuxtLink>
-        <h2 class="text-3xl font-semibold mb-6 text-center">
-          Welcome Back
-        </h2>
+        <h2 class="text-3xl font-semibold mb-6 text-center">Welcome Back</h2>
         <UForm
           :schema="schema"
           :state="state"
           class="space-y-4 max-w-xs w-full"
           @submit.prevent="onSubmit"
         >
-          <UFormField
-            label="Email"
-            name="email"
-          >
-            <UInput
-              v-model="state.email"
-              class="w-full"
-            />
+          <UFormField label="Email" name="email">
+            <UInput v-model="state.email" class="w-full" />
           </UFormField>
 
-          <UFormField
-            label="Password"
-            name="password"
-          >
+          <UFormField label="Password" name="password">
             <UInput
               v-model="state.password"
               :type="show ? 'text' : 'password'"
@@ -109,13 +92,7 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
             </UInput>
           </UFormField>
 
-          <UButton
-            type="submit"
-            block
-            loading-auto
-          >
-            Log In
-          </UButton>
+          <UButton type="submit" block loading-auto> Log In </UButton>
         </UForm>
         <p class="text-muted text-sm mt-8">
           Don't have an account?

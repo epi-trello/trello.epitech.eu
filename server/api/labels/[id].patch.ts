@@ -6,7 +6,10 @@ export default defineEventHandler(async (event) => {
   }
 
   const id = getRouterParam(event, 'id')
-  const { data, error } = await readValidatedBody(event, LabelInputSchema.partial().safeParse)
+  const { data, error } = await readValidatedBody(
+    event,
+    LabelInputSchema.partial().safeParse
+  )
 
   if (error) {
     throw createError({

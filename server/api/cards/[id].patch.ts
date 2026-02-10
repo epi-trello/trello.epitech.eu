@@ -5,7 +5,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  const { data, error } = await readValidatedBody(event, CardInputSchema.partial().safeParse)
+  const { data, error } = await readValidatedBody(
+    event,
+    CardInputSchema.partial().safeParse
+  )
 
   if (error) {
     throw createError({
@@ -26,7 +29,7 @@ export default defineEventHandler(async (event) => {
       dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
       labels: data.labels
         ? {
-            set: data.labels.map(label => ({ id: label }))
+            set: data.labels.map((label) => ({ id: label }))
           }
         : undefined
     }
