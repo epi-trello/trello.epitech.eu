@@ -15,17 +15,20 @@ const links = ref([
 const features = ref<PageCardProps[]>([
   {
     title: 'Visual Workflow',
-    description: 'Stop managing projects in TODO.txt. Visualize your roadmap, drag tasks from "To Do" to "Done", and get a clear view of your progress at a glance.',
+    description:
+      'Stop managing projects in TODO.txt. Visualize your roadmap, drag tasks from "To Do" to "Done", and get a clear view of your progress at a glance.',
     icon: 'i-ph-cards-three'
   },
   {
     title: 'Multi-Module Hub',
-    description: 'One workspace for Minishell, another for MyRPG. Create dedicated boards for every module of the curriculum and keep your semester organized.',
+    description:
+      'One workspace for Minishell, another for MyRPG. Create dedicated boards for every module of the curriculum and keep your semester organized.',
     icon: 'i-ph-puzzle-piece'
   },
   {
     title: 'Group Assignment',
-    description: 'Working in a binôme, trinôme or even more? Assign cards to specific members so everyone knows exactly what to code next. No more confusion.',
+    description:
+      'Working in a binôme, trinôme or even more? Assign cards to specific members so everyone knows exactly what to code next. No more confusion.',
     icon: 'i-ph-users-three'
   }
 ])

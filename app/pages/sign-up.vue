@@ -27,7 +27,7 @@ const schema = z
       .min(8, 'Must be at least 8 characters'),
     confirmPassword: z.string('Password confirmation is required')
   })
-  .refine(data => data.password === data.confirmPassword, {
+  .refine((data) => data.password === data.confirmPassword, {
     error: 'Passwords do not match',
     path: ['confirmPassword']
   })
@@ -64,10 +64,7 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UPage
-    class="h-screen"
-    :ui="{ center: 'flex flex-col' }"
-  >
+  <UPage class="h-screen" :ui="{ center: 'flex flex-col' }">
     <UPageBody class="relative flex items-center flex-1">
       <ULink
         to="/"
@@ -77,15 +74,10 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
         Go back
       </ULink>
       <UContainer class="flex flex-col items-center">
-        <NuxtLink
-          to="/"
-          class="mb-8"
-        >
+        <NuxtLink to="/" class="mb-8">
           <AppLogo class="w-auto" />
         </NuxtLink>
-        <h2 class="text-3xl font-semibold mb-6 text-center">
-          Get Started
-        </h2>
+        <h2 class="text-3xl font-semibold mb-6 text-center">Get Started</h2>
         <UForm
           :schema="schema"
           :state="state"
@@ -93,39 +85,18 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
           @submit.prevent="onSubmit"
         >
           <div class="flex gap-4">
-            <UFormField
-              label="First Name"
-              name="firstname"
-            >
-              <UInput
-                v-model="state.firstname"
-                class="w-full"
-              />
+            <UFormField label="First Name" name="firstname">
+              <UInput v-model="state.firstname" class="w-full" />
             </UFormField>
-            <UFormField
-              label="Last Name"
-              name="lastname"
-            >
-              <UInput
-                v-model="state.lastname"
-                class="w-full"
-              />
+            <UFormField label="Last Name" name="lastname">
+              <UInput v-model="state.lastname" class="w-full" />
             </UFormField>
           </div>
-          <UFormField
-            label="Email"
-            name="email"
-          >
-            <UInput
-              v-model="state.email"
-              class="w-full"
-            />
+          <UFormField label="Email" name="email">
+            <UInput v-model="state.email" class="w-full" />
           </UFormField>
 
-          <UFormField
-            label="Password"
-            name="password"
-          >
+          <UFormField label="Password" name="password">
             <UInput
               v-model="state.password"
               :type="show ? 'text' : 'password'"
@@ -146,10 +117,7 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
             </UInput>
           </UFormField>
 
-          <UFormField
-            label="Confirm Password"
-            name="confirmPassword"
-          >
+          <UFormField label="Confirm Password" name="confirmPassword">
             <UInput
               v-model="state.confirmPassword"
               :type="showConfirm ? 'text' : 'password'"
@@ -170,12 +138,7 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
             </UInput>
           </UFormField>
 
-          <UButton
-            type="submit"
-            block
-          >
-            Sign Up
-          </UButton>
+          <UButton type="submit" block> Sign Up </UButton>
         </UForm>
         <p class="text-muted text-sm mt-8">
           Do you already have an account?

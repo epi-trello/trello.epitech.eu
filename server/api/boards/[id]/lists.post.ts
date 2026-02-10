@@ -13,7 +13,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Bad Request' })
   }
 
-  const { data, error } = await readValidatedBody(event, ListInputSchema.safeParse)
+  const { data, error } = await readValidatedBody(
+    event,
+    ListInputSchema.safeParse
+  )
 
   if (error) {
     throw createError({

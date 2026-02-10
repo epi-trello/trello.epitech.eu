@@ -12,7 +12,7 @@
         height="1000"
         rx="120.33"
         ry="120.33"
-        style="fill: #013afb;"
+        style="fill: #013afb"
       />
       <rect
         x="184.11"
@@ -21,7 +21,7 @@
         height="637.95"
         rx="32"
         ry="32"
-        style="fill: #fff;"
+        style="fill: #fff"
       />
       <rect
         x="573.35"
@@ -30,7 +30,7 @@
         height="138.07"
         rx="32"
         ry="32"
-        style="fill: #fff;"
+        style="fill: #fff"
       />
       <rect
         x="574.26"
@@ -39,7 +39,7 @@
         height="138.07"
         rx="32"
         ry="32"
-        style="fill: #fff;"
+        style="fill: #fff"
       />
       <rect
         x="574.25"
@@ -48,7 +48,7 @@
         height="138.07"
         rx="32"
         ry="32"
-        style="fill: #fff;"
+        style="fill: #fff"
       />
     </svg>
 

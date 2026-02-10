@@ -22,7 +22,9 @@ describe('createObjectUrl (Integration test)', () => {
   })
 
   it('should work with different MIME types', () => {
-    const imageFile = new File(['fake-image-data'], 'image.png', { type: 'image/png' })
+    const imageFile = new File(['fake-image-data'], 'image.png', {
+      type: 'image/png'
+    })
     const url = createObjectUrl(imageFile)
 
     expect(url).toContain('blob:')

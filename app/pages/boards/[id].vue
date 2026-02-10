@@ -25,7 +25,16 @@ title.value = board.value ? board.value.name : 'Unknown'
 
 const schema = z.object({
   title: z.string('Title is required').min(1, 'Title is required'),
-  color: z.enum(['GRAY', 'RED', 'YELLOW', 'GREEN', 'SKY', 'BLUE', 'VIOLET', 'PINK'])
+  color: z.enum([
+    'GRAY',
+    'RED',
+    'YELLOW',
+    'GREEN',
+    'SKY',
+    'BLUE',
+    'VIOLET',
+    'PINK'
+  ])
 })
 
 type Schema = z.output<typeof schema>
@@ -36,20 +45,26 @@ const state = reactive<Partial<Schema>>({
 })
 
 const cardModalOpen = ref(false)
-const selectedCard = ref<{ title: string, description?: string | null } | null>(null)
+const selectedCard = ref<{ title: string; description?: string | null } | null>(
+  null
+)
 
-function openCardModal(card: { title: string, description?: string | null }) {
+function openCardModal(card: { title: string; description?: string | null }) {
   selectedCard.value = card
   cardModalOpen.value = true
 }
 
-async function createList({ data }: FormSubmitEvent<Schema>, next?: () => void) {
+async function createList(
+  { data }: FormSubmitEvent<Schema>,
+  next?: () => void
+) {
   if (!board.value) return
 
   try {
-    const maxPosition = board.value.lists.length > 0
-      ? Math.max(...board.value.lists.map(l => l.position)) + POSITION_GAP
-      : POSITION_GAP
+    const maxPosition =
+      board.value.lists.length > 0
+        ? Math.max(...board.value.lists.map((l) => l.position)) + POSITION_GAP
+        : POSITION_GAP
 
     await $fetch(`/api/boards/${params.id}/lists`, {
       method: 'POST',
@@ -98,7 +113,7 @@ function applyDrag(arr: any[], dragResult: any) {
 }
 
 const getCardPayload = (listId: string) => (index: number) => {
-  const list = board.value?.lists.find(l => l.id === listId)
+  const list = board.value?.lists.find((l) => l.id === listId)
   const card = list?.cards[index]
 
   return card ? JSON.parse(JSON.stringify(card)) : undefined
@@ -124,9 +139,13 @@ function calculateNewPosition(cards: any[], index: number) {
 }
 
 async function onCardDrop(listId: string, dropResult: any) {
-  if (!board.value || dropResult.removedIndex === null && dropResult.addedIndex === null) return
+  if (
+    !board.value ||
+    (dropResult.removedIndex === null && dropResult.addedIndex === null)
+  )
+    return
 
-  const listIndex = board.value.lists.findIndex(l => l.id === listId)
+  const listIndex = board.value.lists.findIndex((l) => l.id === listId)
   if (listIndex === -1) return
 
   const list = board.value.lists[listIndex]
@@ -171,12 +190,19 @@ const getListPayload = (index: number) => {
 }
 
 async function onListDrop(dropResult: any) {
-  if (!board.value || (dropResult.removedIndex === null && dropResult.addedIndex === null)) return
+  if (
+    !board.value ||
+    (dropResult.removedIndex === null && dropResult.addedIndex === null)
+  )
+    return
 
   const newLists = applyDrag(board.value.lists, dropResult)
   board.value.lists = newLists
 
-  if (dropResult.addedIndex !== null && dropResult.removedIndex !== dropResult.addedIndex) {
+  if (
+    dropResult.addedIndex !== null &&
+    dropResult.removedIndex !== dropResult.addedIndex
+  ) {
     const list = dropResult.payload
     const newIndex = dropResult.addedIndex
 
@@ -222,10 +248,7 @@ async function onListDrop(dropResult: any) {
 
     <Teleport to="#navbar-right">
       <UModal title="Create a new list">
-        <UButton
-          icon="i-ph-plus"
-          label="New list"
-        />
+        <UButton icon="i-ph-plus" label="New list" />
 
         <template #body="{ close }">
           <UForm
@@ -234,20 +257,14 @@ async function onListDrop(dropResult: any) {
             class="space-y-4"
             @submit.prevent="createList($event, close)"
           >
-            <UFormField
-              name="title"
-              label="Title"
-            >
+            <UFormField name="title" label="Title">
               <UInput
                 v-model="state.title"
                 placeholder="e.g. In progress"
                 class="w-full"
               />
             </UFormField>
-            <UFormField
-              name="color"
-              label="Color"
-            >
+            <UFormField name="color" label="Color">
               <USelect
                 v-model="state.color"
                 :items="colorItems"
@@ -269,11 +286,7 @@ async function onListDrop(dropResult: any) {
               </USelect>
             </UFormField>
             <div class="flex w-full justify-end">
-              <UButton
-                type="submit"
-                label="Create list"
-                loading-auto
-              />
+              <UButton type="submit" label="Create list" loading-auto />
             </div>
           </UForm>
         </template>
@@ -296,10 +309,7 @@ async function onListDrop(dropResult: any) {
       class="flex-1 sm:p-0 lg:p-0 sm:pb-32 lg:pb-32"
     />
 
-    <div
-      v-else
-      class="flex flex-col flex-1 min-w-0 overflow-x-auto"
-    >
+    <div v-else class="flex flex-col flex-1 min-w-0 overflow-x-auto">
       <Container
         group-name="lists"
         tag="div"
@@ -310,10 +320,7 @@ async function onListDrop(dropResult: any) {
         :get-child-payload="getListPayload"
         @drop="onListDrop"
       >
-        <Draggable
-          v-for="list in board?.lists || []"
-          :key="list.id"
-        >
+        <Draggable v-for="list in board?.lists || []" :key="list.id">
           <UCard
             variant="subtle"
             class="flex flex-col shrink-0 w-72 h-fit"
@@ -331,17 +338,14 @@ async function onListDrop(dropResult: any) {
               </div>
 
               <div class="flex">
-                <CreateCardModal
-                  :board-id="board.id"
-                  :list-id="list.id"
-                />
+                <CreateCardModal :board-id="board.id" :list-id="list.id" />
                 <ListActions :list="list" />
               </div>
             </div>
             <Container
               group-name="cards"
               tag="div"
-              :should-accept-drop="(e: any) => (e.groupName === 'cards')"
+              :should-accept-drop="(e: any) => e.groupName === 'cards'"
               :get-child-payload="getCardPayload(list.id)"
               :drop-placeholder="{
                 className: 'bg-elevated border border-dashed border-muted mb-2',
@@ -352,19 +356,14 @@ async function onListDrop(dropResult: any) {
               class="flex flex-col flex-1"
               @drop="onCardDrop(list.id, $event)"
             >
-              <Draggable
-                v-for="card in list.cards"
-                :key="card.id"
-              >
+              <Draggable v-for="card in list.cards" :key="card.id">
                 <UModal
                   :title="card.title"
                   :ui="{
                     content: 'max-w-2xl'
                   }"
                 >
-                  <UCard
-                    class="ring-inset mb-2 cursor-pointer"
-                  >
+                  <UCard class="ring-inset mb-2 cursor-pointer">
                     <p class="font-medium">
                       {{ card.title }}
                     </p>
@@ -391,18 +390,27 @@ async function onListDrop(dropResult: any) {
                   <template #body>
                     <div class="flex w-full">
                       <div class="w-full overflow-y-auto">
-                        <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
+                        <p
+                          class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted"
+                        >
                           Description
                         </p>
-                        <p v-if="card.description" class="leading-relaxed whitespace-pre-wrap">
+                        <p
+                          v-if="card.description"
+                          class="leading-relaxed whitespace-pre-wrap"
+                        >
                           {{ card.description }}
                         </p>
                         <p v-else class="text-sm italic text-muted">
                           No description.
                         </p>
                       </div>
-                      <div class="w-50 shrink-0 border-l border-default pl-6 ml-6">
-                        <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
+                      <div
+                        class="w-50 shrink-0 border-l border-default pl-6 ml-6"
+                      >
+                        <p
+                          class="mb-4 text-xs font-semibold uppercase tracking-wider text-muted"
+                        >
                           Actions
                         </p>
                         <nav class="flex flex-col gap-1.5">

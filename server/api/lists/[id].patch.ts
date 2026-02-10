@@ -5,7 +5,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  const { data, error } = await readValidatedBody(event, ListInputSchema.partial().safeParse)
+  const { data, error } = await readValidatedBody(
+    event,
+    ListInputSchema.partial().safeParse
+  )
 
   if (error) {
     throw createError({

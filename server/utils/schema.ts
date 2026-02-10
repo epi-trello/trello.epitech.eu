@@ -7,7 +7,9 @@ export const BoardInputSchema = z.object({
 export const ListInputSchema = z.object({
   title: z.string().max(255),
   position: z.number().min(0),
-  color: z.enum(['GRAY', 'RED', 'YELLOW', 'GREEN', 'SKY', 'BLUE', 'VIOLET', 'PINK']).optional()
+  color: z
+    .enum(['GRAY', 'RED', 'YELLOW', 'GREEN', 'SKY', 'BLUE', 'VIOLET', 'PINK'])
+    .optional()
 })
 
 export const CardInputSchema = z.object({

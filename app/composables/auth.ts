@@ -31,8 +31,8 @@ export function useAuth() {
     }
   )
 
-  const session
-    = useState<InferSessionFromClient<BetterAuthClientOptions> | null>(
+  const session =
+    useState<InferSessionFromClient<BetterAuthClientOptions> | null>(
       'auth:session',
       () => null
     )
