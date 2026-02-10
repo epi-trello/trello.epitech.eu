@@ -6,6 +6,7 @@ Use this template to get started with [Nuxt UI](https://ui.nuxt.com) quickly.
 
 - [Live demo](https://starter-template.nuxt.dev/)
 - [Documentation](https://ui.nuxt.com/docs/getting-started/installation/nuxt)
+- **[Documentation technique (Epitrello)](docs/TECHNICAL.md)** — Stack, setup, API, BDD, conventions
 
 <a href="https://starter-template.nuxt.dev/" target="_blank">
   <picture>
