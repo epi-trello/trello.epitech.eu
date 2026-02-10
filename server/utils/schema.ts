@@ -14,8 +14,8 @@ export const CardInputSchema = z.object({
   title: z.string().max(255),
   description: z.string().max(5000).optional(),
   position: z.number().min(0),
-  startDate: z.string().optional(),
-  dueDate: z.string().optional(),
+  startDate: z.string().nullish(),
+  dueDate: z.string().nullish(),
   labels: z.array(z.string()).optional(),
   listId: z.string()
 })

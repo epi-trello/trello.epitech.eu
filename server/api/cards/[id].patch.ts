@@ -21,6 +21,8 @@ export default defineEventHandler(async (event) => {
     where: { id, list: { board: { ownerId: session.user.id } } },
     data: {
       ...data,
+      startDate: data.startDate !== undefined ? (data.startDate ? new Date(data.startDate) : null) : undefined,
+      dueDate: data.dueDate !== undefined ? (data.dueDate ? new Date(data.dueDate) : null) : undefined,
       labels: data.labels
         ? {
             set: data.labels.map(label => ({ id: label }))

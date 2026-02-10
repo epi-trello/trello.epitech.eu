@@ -40,6 +40,8 @@ const selectedCard = ref<{
   id: string
   title: string
   description?: string | null
+  startDate?: string | null
+  dueDate?: string | null
   labels?: Array<{ id: string, name: string, color: string }>
 } | null>(null)
 const cardEditDraft = ref({ title: '', description: '' })
@@ -63,6 +65,40 @@ const filteredBoardLabels = computed(() => {
 
 function isLabelOnCard(labelId: string) {
   return selectedCard.value?.labels?.some(l => l.id === labelId) ?? false
+}
+
+function formatCardDate(iso: string | null | undefined): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+function toInputDate(iso: string | null | undefined): string {
+  if (!iso) return ''
+  return new Date(iso).toISOString().slice(0, 10)
+}
+
+async function updateCardDates(payload: { startDate?: string | null, dueDate?: string | null }) {
+  if (!selectedCard.value) return
+  try {
+    const body: Record<string, string | null | undefined> = {}
+    if (payload.startDate !== undefined) body.startDate = payload.startDate || null
+    if (payload.dueDate !== undefined) body.dueDate = payload.dueDate || null
+    await $fetch(`/api/cards/${selectedCard.value.id}`, {
+      method: 'PATCH',
+      body
+    })
+    if (payload.startDate !== undefined) selectedCard.value.startDate = payload.startDate || null
+    if (payload.dueDate !== undefined) selectedCard.value.dueDate = payload.dueDate || null
+    await refresh()
+    add({ title: 'Dates updated', color: 'success' })
+  } catch (error: any) {
+    add({
+      color: 'error',
+      title: 'Error',
+      description: error?.data?.message ?? error?.message ?? 'Failed to update dates'
+    })
+  }
 }
 
 async function openLabelsMenu() {
@@ -146,6 +182,8 @@ function openCardModal(card: {
   id: string
   title: string
   description?: string | null
+  startDate?: string | null
+  dueDate?: string | null
   labels?: Array<{ id: string, name: string, color: string }>
 }) {
   selectedCard.value = card
@@ -588,6 +626,19 @@ async function onListDrop(dropResult: any) {
                 class="w-full"
               />
             </div>
+            <div v-if="selectedCard.startDate || selectedCard.dueDate" class="space-y-2">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-muted">
+                Dates
+              </label>
+              <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
+                <span v-if="selectedCard.startDate">
+                  <span class="font-medium text-default">Start:</span> {{ formatCardDate(selectedCard.startDate) }}
+                </span>
+                <span v-if="selectedCard.dueDate">
+                  <span class="font-medium text-default">Due:</span> {{ formatCardDate(selectedCard.dueDate) }}
+                </span>
+              </div>
+            </div>
             <div v-if="selectedCard.labels?.length" class="space-y-2">
               <label class="block text-xs font-semibold uppercase tracking-wider text-muted">
                 Labels
@@ -640,18 +691,60 @@ async function onListDrop(dropResult: any) {
                 label="Labels"
                 @click="openLabelsMenu()"
               />
-              <UButton
-                variant="soft"
-                color="neutral"
-                icon="ph:calendar-blank"
-                label="Start date"
-              />
-              <UButton
-                variant="soft"
-                color="neutral"
-                icon="i-ph-calendar"
-                label="Due date"
-              />
+              <UPopover>
+                <UButton
+                  variant="soft"
+                  color="neutral"
+                  icon="i-ph-calendar-blank"
+                  label="Start date"
+                />
+                <template #content>
+                  <div class="w-64 space-y-2 p-3">
+                    <input
+                      type="date"
+                      :value="toInputDate(selectedCard.startDate)"
+                      class="w-full rounded-lg border border-default bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      @input="(e: Event) => updateCardDates({ startDate: (e.target as HTMLInputElement).value || null })"
+                    />
+                    <UButton
+                      v-if="selectedCard.startDate"
+                      variant="ghost"
+                      color="neutral"
+                      size="xs"
+                      label="Clear"
+                      block
+                      @click="updateCardDates({ startDate: null })"
+                    />
+                  </div>
+                </template>
+              </UPopover>
+              <UPopover>
+                <UButton
+                  variant="soft"
+                  color="neutral"
+                  icon="i-ph-calendar"
+                  label="Due date"
+                />
+                <template #content>
+                  <div class="w-64 space-y-2 p-3">
+                    <input
+                      type="date"
+                      :value="toInputDate(selectedCard.dueDate)"
+                      class="w-full rounded-lg border border-default bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      @input="(e: Event) => updateCardDates({ dueDate: (e.target as HTMLInputElement).value || null })"
+                    />
+                    <UButton
+                      v-if="selectedCard.dueDate"
+                      variant="ghost"
+                      color="neutral"
+                      size="xs"
+                      label="Clear"
+                      block
+                      @click="updateCardDates({ dueDate: null })"
+                    />
+                  </div>
+                </template>
+              </UPopover>
               <UButton
                 variant="soft"
                 color="error"
