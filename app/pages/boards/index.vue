@@ -79,7 +79,7 @@ async function deleteBoard(boardId: string, next?: () => void) {
   <ClientOnly>
     <Teleport to="#navbar-right">
       <UModal title="Create a new board" @update:open="state.name = undefined">
-        <UButton icon="i-ph-plus" label="Create" />
+        <UButton data-tour="create-board" icon="i-ph-plus" label="Create" />
 
         <template #body="{ close }">
           <UForm
@@ -106,7 +106,7 @@ async function deleteBoard(boardId: string, next?: () => void) {
   </ClientOnly>
 
   <UContainer class="py-8">
-    <UPageGrid>
+    <UPageGrid data-tour="boards-grid">
       <UPageCard
         v-for="board in boards"
         :key="board.id"

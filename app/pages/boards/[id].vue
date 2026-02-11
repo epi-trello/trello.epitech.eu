@@ -227,6 +227,7 @@ async function onListDrop(dropResult: any) {
   <ClientOnly>
     <Teleport to="#navbar-left">
       <UButton
+        data-tour="back-board"
         to="/boards"
         variant="ghost"
         color="neutral"
@@ -238,7 +239,7 @@ async function onListDrop(dropResult: any) {
 
     <Teleport to="#navbar-right">
       <UModal title="Create a new list">
-        <UButton icon="i-ph-plus" label="New list" />
+        <UButton data-tour="new-list" icon="i-ph-plus" label="New list" />
 
         <template #body="{ close }">
           <UForm
@@ -284,7 +285,7 @@ async function onListDrop(dropResult: any) {
     </Teleport>
   </ClientOnly>
 
-  <div class="flex-1 flex flex-col overflow-hidden">
+  <div class="flex-1 flex flex-col overflow-hidden" data-tour="lists-area">
     <UEmpty
       v-if="!board?.lists.length"
       variant="naked"
