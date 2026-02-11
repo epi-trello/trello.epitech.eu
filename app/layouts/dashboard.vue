@@ -4,6 +4,11 @@ import type { NavigationMenuItem, DropdownMenuItem } from '@nuxt/ui'
 const { user, signOut } = useAuth()
 const colorMode = useColorMode()
 const title = usePageTitle()
+const route = useRoute()
+
+const isBoardDetailPage = computed(
+  () => route.path.match(/^\/boards\/[^/]+$/) && !route.path.includes('/cards/')
+)
 
 const navItems: NavigationMenuItem[] = [
   {
@@ -138,9 +143,14 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
       <UDashboardNavbar :ui="{ left: 'gap-0' }">
         <template #left>
           <div id="navbar-left" />
+          <div
+            id="navbar-center"
+            class="flex items-center gap-1.5 font-semibold text-highlighted truncate min-w-0 flex-1"
+          />
 
           <ClientOnly>
             <h1
+              v-if="!isBoardDetailPage"
               class="flex items-center gap-1.5 font-semibold text-highlighted truncate"
             >
               {{ title }}
