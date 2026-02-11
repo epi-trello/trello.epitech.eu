@@ -18,10 +18,60 @@ const board = ref(_board.value)
 watch(_board, (newBoard) => {
   if (newBoard) {
     board.value = newBoard
+    title.value = newBoard.name
   }
 })
 
 title.value = board.value ? board.value.name : 'Unknown'
+
+const isEditingBoardName = ref(false)
+const boardNameEdit = ref('')
+const isSavingBoardName = ref(false)
+
+function startEditBoardName() {
+  if (board.value) {
+    boardNameEdit.value = board.value.name
+    isEditingBoardName.value = true
+  }
+}
+
+async function saveBoardName() {
+  if (!board.value || boardNameEdit.value.trim() === '') return
+  const newName = boardNameEdit.value.trim()
+  if (newName === board.value.name) {
+    isEditingBoardName.value = false
+    return
+  }
+  isSavingBoardName.value = true
+  try {
+    await $fetch(`/api/boards/${params.id}`, {
+      method: 'PATCH',
+      body: { name: newName }
+    })
+    if (board.value) board.value.name = newName
+    title.value = newName
+    isEditingBoardName.value = false
+    add({
+      title: 'Board updated',
+      description: 'The board name has been updated.',
+      color: 'success'
+    })
+    await refresh()
+  } catch (error: any) {
+    add({
+      color: 'error',
+      title: 'Error',
+      description: error.message || 'Unable to update the board name'
+    })
+  } finally {
+    isSavingBoardName.value = false
+  }
+}
+
+function cancelEditBoardName() {
+  isEditingBoardName.value = false
+  boardNameEdit.value = board.value?.name ?? ''
+}
 
 const schema = z.object({
   title: z.string('Title is required').min(1, 'Title is required'),
@@ -235,6 +285,50 @@ async function onListDrop(dropResult: any) {
         icon="i-ph-arrow-left"
         class="mr-2"
       />
+    </Teleport>
+
+    <Teleport to="#navbar-center">
+      <h1 class="flex items-center gap-2 min-w-0 truncate">
+        <template v-if="isEditingBoardName">
+          <UInput
+            v-model="boardNameEdit"
+            size="sm"
+            class="min-w-40"
+            :disabled="isSavingBoardName"
+            autofocus
+            @keydown.enter="saveBoardName()"
+            @keydown.escape="cancelEditBoardName()"
+          />
+          <UButton
+            icon="i-ph-check"
+            size="xs"
+            color="primary"
+            :loading="isSavingBoardName"
+            aria-label="Save"
+            @click="saveBoardName()"
+          />
+          <UButton
+            icon="i-ph-x"
+            size="xs"
+            color="neutral"
+            variant="ghost"
+            :disabled="isSavingBoardName"
+            aria-label="Cancel"
+            @click="cancelEditBoardName()"
+          />
+        </template>
+        <template v-else>
+          <span class="truncate">{{ board?.name ?? 'Unknown' }}</span>
+          <UButton
+            icon="i-ph-pencil-simple"
+            size="xs"
+            color="neutral"
+            variant="ghost"
+            aria-label="Edit board name"
+            @click="startEditBoardName()"
+          />
+        </template>
+      </h1>
     </Teleport>
 
     <Teleport to="#navbar-right">
