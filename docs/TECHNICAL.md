@@ -22,9 +22,9 @@ Practical project documentation: stack, setup, structure, API and conventions.
 
 Expected variables (e.g. in `.env` at project root):
 
-| Variable         | Description                    |
-|------------------|--------------------------------|
-| `DATABASE_URL`   | PostgreSQL connection URL      |
+| Variable       | Description               |
+| -------------- | ------------------------- |
+| `DATABASE_URL` | PostgreSQL connection URL |
 
 Example: `DATABASE_URL="postgresql://user:password@localhost:5432/epitrello"`
 
@@ -48,15 +48,15 @@ pnpm dev
 
 Other useful commands:
 
-| Command           | Purpose                                      |
-|-------------------|----------------------------------------------|
-| `pnpm build`      | Production build                             |
-| `pnpm preview`     | Preview production build                     |
-| `pnpm typecheck`   | TypeScript check                             |
-| `pnpm lint`        | Check formatting (Prettier)                  |
-| `pnpm lint:fix`    | Fix formatting                               |
-| `pnpm test`        | Run tests (Vitest)                            |
-| `pnpm auth:schema` | Generate better-auth schema if needed         |
+| Command            | Purpose                               |
+| ------------------ | ------------------------------------- |
+| `pnpm build`       | Production build                      |
+| `pnpm preview`     | Preview production build              |
+| `pnpm typecheck`   | TypeScript check                      |
+| `pnpm lint`        | Check formatting (Prettier)           |
+| `pnpm lint:fix`    | Fix formatting                        |
+| `pnpm test`        | Run tests (Vitest)                    |
+| `pnpm auth:schema` | Generate better-auth schema if needed |
 
 ---
 
@@ -101,7 +101,7 @@ Example page meta:
 ```ts
 definePageMeta({
   layout: 'dashboard',
-  auth: false                    // no redirect
+  auth: false // no redirect
   // or auth: { only: 'guest', redirectUserTo: '/boards' }
 })
 ```
@@ -119,29 +119,29 @@ Handler conventions:
 
 ### Main endpoints
 
-| Method | Route | Description |
-|--------|--------|-------------|
-| GET    | `/api/boards` | List user's boards |
-| POST   | `/api/boards` | Create a board (body: `{ name }`) |
-| GET    | `/api/boards/:id` | Board detail + lists + cards + labels |
-| PATCH  | `/api/boards/:id` | Update a board |
-| DELETE | `/api/boards/:id` | Delete a board |
-| GET    | `/api/boards/:id/lists` | Board lists |
-| POST   | `/api/boards/:id/lists` | Create a list (body: `title`, `position`, `color?`) |
-| PATCH  | `/api/lists/:id` | Update a list (e.g. `position`, `boardId`) |
-| DELETE | `/api/lists/:id` | Delete a list |
-| POST   | `/api/cards` | Create a card (body: `title`, `listId`, `position`, etc.) |
-| GET    | `/api/cards/:id` | Card detail |
-| PATCH  | `/api/cards/:id` | Update a card (list, position, labels, dates, …) |
-| DELETE | `/api/cards/:id` | Delete a card |
-| POST   | `/api/boards/:id/labels` | Create a label |
-| GET    | `/api/boards/:id/labels` | Board labels |
-| PATCH  | `/api/labels/:id` | Update a label |
-| DELETE | `/api/labels/:id` | Delete a label |
-| POST   | `/api/cards/:id/labels/:labelId` | Attach label to card |
-| DELETE | `/api/cards/:id/labels/:labelId` | Detach label |
-| POST   | `/api/upload` | Upload (e.g. Vercel Blob) |
-| *      | `/api/auth/[...all]` | better-auth proxy |
+| Method | Route                            | Description                                               |
+| ------ | -------------------------------- | --------------------------------------------------------- |
+| GET    | `/api/boards`                    | List user's boards                                        |
+| POST   | `/api/boards`                    | Create a board (body: `{ name }`)                         |
+| GET    | `/api/boards/:id`                | Board detail + lists + cards + labels                     |
+| PATCH  | `/api/boards/:id`                | Update a board                                            |
+| DELETE | `/api/boards/:id`                | Delete a board                                            |
+| GET    | `/api/boards/:id/lists`          | Board lists                                               |
+| POST   | `/api/boards/:id/lists`          | Create a list (body: `title`, `position`, `color?`)       |
+| PATCH  | `/api/lists/:id`                 | Update a list (e.g. `position`, `boardId`)                |
+| DELETE | `/api/lists/:id`                 | Delete a list                                             |
+| POST   | `/api/cards`                     | Create a card (body: `title`, `listId`, `position`, etc.) |
+| GET    | `/api/cards/:id`                 | Card detail                                               |
+| PATCH  | `/api/cards/:id`                 | Update a card (list, position, labels, dates, …)          |
+| DELETE | `/api/cards/:id`                 | Delete a card                                             |
+| POST   | `/api/boards/:id/labels`         | Create a label                                            |
+| GET    | `/api/boards/:id/labels`         | Board labels                                              |
+| PATCH  | `/api/labels/:id`                | Update a label                                            |
+| DELETE | `/api/labels/:id`                | Delete a label                                            |
+| POST   | `/api/cards/:id/labels/:labelId` | Attach label to card                                      |
+| DELETE | `/api/cards/:id/labels/:labelId` | Detach label                                              |
+| POST   | `/api/upload`                    | Upload (e.g. Vercel Blob)                                 |
+| \*     | `/api/auth/[...all]`             | better-auth proxy                                         |
 
 Zod schemas live in `server/utils/schema.ts`: `BoardInputSchema`, `ListInputSchema`, `CardInputSchema`, `LabelInputSchema`.
 
@@ -208,12 +208,12 @@ The application is designed to be deployed on **Vercel** with the database hoste
 ### Git hooks (Husky + Commitlint)
 
 - **Husky** runs Git hooks. After `pnpm install`, the `prepare` script runs `husky` to install them.
-- **Commit message (Commitlint)**  
-  - Hook: `.husky/commit-msg` runs `commitlint --edit $1`.  
-  - Config: `.commitlintrc.json` extends `@commitlint/config-conventional`.  
+- **Commit message (Commitlint)**
+  - Hook: `.husky/commit-msg` runs `commitlint --edit $1`.
+  - Config: `.commitlintrc.json` extends `@commitlint/config-conventional`.
   - Commits must follow the [Conventional Commits](https://www.conventionalcommits.org/) format (e.g. `feat: add board filters`, `fix: card drag on mobile`). Invalid messages cause the commit to be rejected.
-- **Pre-commit**  
-  - Hook: `.husky/pre-commit` runs `lint-staged`.  
+- **Pre-commit**
+  - Hook: `.husky/pre-commit` runs `lint-staged`.
   - Only staged files are checked. This typically runs formatting (e.g. Prettier) and optionally lint, so code is formatted and linted before each commit.
 
 ### Linting
