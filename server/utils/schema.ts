@@ -19,6 +19,7 @@ export const CardInputSchema = z.object({
   startDate: z.string().optional(),
   dueDate: z.string().optional(),
   labels: z.array(z.string()).optional(),
+  assignees: z.array(z.string()).optional(),
   listId: z.string()
 })
 

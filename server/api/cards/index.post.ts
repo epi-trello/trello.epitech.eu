@@ -30,6 +30,9 @@ export default defineEventHandler(async (event) => {
       startDate: data.startDate ? new Date(data.startDate) : undefined,
       dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
       listId: data.listId,
+      assignees: {
+        connect: data.assignees?.map((userId) => ({ id: userId })) || []
+      },
       labels: {
         connect: data.labels?.map((label) => ({ id: label })) || []
       }

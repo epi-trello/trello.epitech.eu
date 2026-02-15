@@ -14,19 +14,22 @@ datasource db {
 }
 
 model User {
-  id            String    @id
+  id            String        @id
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean       @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   firstname     String?
   lastname      String?
   sessions      Session[]
   accounts      Account[]
 
-  boards        Board[]
+  ownedBoards   Board[]       @relation("BoardOwner")
+  memberships   BoardMember[]
+  assignedCards Card[]        @relation("CardAssignees")
+  // sentInvites   BoardInvite[]
 
   @@unique([email])
   @@map("user")
@@ -84,15 +87,47 @@ model Board {
   id        String    @id
   name      String
   ownerId   String
-  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner     User      @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
   lists     List[]
   labels    Label[]
+  members   BoardMember[]
+  // invites   BoardInvite[]
 
   @@map("board")
 }
+
+model BoardMember {
+  id      String    @id
+  boardId String
+  userId  String
+  role    BoardRole @default(MEMBER)
+  joinedAt DateTime  @default(now())
+
+  board   Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([boardId, userId])
+  @@map("board_member")
+}
+
+// model BoardInvite {
+//   id        String    @id
+//   email     String
+//   boardId   String
+//   token     String    @unique
+//   inviterId String
+//   expiresAt DateTime
+//   createdAt DateTime  @default(now())
+
+//   board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+//   inviter   User      @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+
+//   @@index([email])
+//   @@map("board_invite")
+// }
 
 model List {
   id        String    @id
@@ -122,6 +157,7 @@ model Card {
   updatedAt   DateTime  @updatedAt
 
   labels      Label[]
+  assignees    User[]    @relation("CardAssignees")
 
   @@map("card")
 }
@@ -138,6 +174,12 @@ model Label {
   cards     Card[]
 
   @@map("label")
+}
+
+enum BoardRole {
+  ADMIN
+  MEMBER
+  VIEWER
 }
 
 enum Color {

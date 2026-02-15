@@ -7,8 +7,20 @@ export default defineEventHandler(async (event) => {
 
   const id = getRouterParam(event, 'id')
   const board = await prisma.board.findUnique({
-    where: { id, ownerId: session.user.id },
+    where: {
+      id,
+      OR: [
+        { ownerId: session.user.id },
+        { members: { some: { userId: session.user.id } } }
+      ]
+    },
     include: {
+      owner: true,
+      members: {
+        include: {
+          user: true
+        }
+      },
       lists: {
         orderBy: {
           position: 'asc'
@@ -16,7 +28,8 @@ export default defineEventHandler(async (event) => {
         include: {
           cards: {
             include: {
-              labels: true
+              labels: true,
+              assignees: true
             },
             orderBy: {
               position: 'asc'
