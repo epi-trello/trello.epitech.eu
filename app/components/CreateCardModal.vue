@@ -26,6 +26,19 @@ const schema = z.object({
       message: 'Invalid date format'
     })
     .optional(),
+  assignees: z
+    .array(
+      z.object({
+        label: z.string(),
+        value: z.string(),
+        avatar: z.object({
+          src: z.string().or(z.undefined()),
+          alt: z.string(),
+          icon: z.string()
+        })
+      })
+    )
+    .optional(),
   labels: z
     .array(
       z.object({
@@ -45,6 +58,7 @@ const state = shallowReactive<Partial<Schema>>({
   listId: props.listId,
   startDate: undefined,
   dueDate: undefined,
+  assignees: undefined,
   labels: undefined
 })
 
@@ -75,6 +89,22 @@ const { data: labels, refresh } = await useFetch(
   }
 )
 
+const { data: members } = await useFetch(
+  `/api/boards/${props.boardId}/members`,
+  {
+    transform: (data) =>
+      data.map((member) => ({
+        value: member.id,
+        label: member.name,
+        avatar: {
+          src: member.image || undefined,
+          alt: member.name,
+          icon: 'i-ph-user'
+        }
+      }))
+  }
+)
+
 async function onSubmit({ data }: FormSubmitEvent<Schema>, next?: () => void) {
   try {
     const list = lists.value?.find((l) => l.id === data.listId)
@@ -92,6 +122,7 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>, next?: () => void) {
         listId: data.listId,
         startDate: data.startDate ? data.startDate.toString() : undefined,
         dueDate: data.dueDate ? data.dueDate.toString() : undefined,
+        assignees: data.assignees ? data.assignees.map((a) => a.value) : [],
         labels: data.labels ? data.labels.map((label) => label.value) : []
       }
     })
@@ -305,6 +336,17 @@ function reset() {
             </USelectMenu>
           </UFormField>
         </div>
+        <UFormField name="assignees" label="Assignees" class="flex-1">
+          <USelectMenu
+            v-model="state.assignees"
+            :avatar="state.assignees?.[0]?.avatar"
+            :items="members"
+            size="sm"
+            multiple
+            class="w-full max-w-36"
+            placeholder="Select assignees"
+          />
+        </UFormField>
         <div class="flex w-full justify-end">
           <UButton type="submit" label="Create card" loading-auto />
         </div>

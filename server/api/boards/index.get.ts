@@ -6,7 +6,22 @@ export default defineEventHandler(async (event) => {
   }
 
   const boards = await prisma.board.findMany({
-    where: { ownerId: session.user.id }
+    where: {
+      OR: [
+        { ownerId: session.user.id },
+        { members: { some: { userId: session.user.id } } }
+      ]
+    },
+    include: {
+      owner: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true
+        }
+      }
+    }
   })
 
   return boards
