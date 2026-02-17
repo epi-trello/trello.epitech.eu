@@ -12,9 +12,9 @@ export function useTour() {
         {
           element: '[data-tour="sidebar"]',
           popover: {
-            title: 'Welcome to Epitrello',
+            title: 'Bienvenue sur Epitrello',
             description:
-              "Navigate between your boards and access settings. Let's take a quick tour!",
+              'Votre tableau de bord : accédez à vos tableaux (Boards) et aux paramètres depuis cette barre. Chaque tableau contient des listes (To do, En cours…) et des cartes à organiser.',
             side: 'right',
             align: 'start'
           }
@@ -22,9 +22,9 @@ export function useTour() {
         {
           element: '[data-tour="create-board"]',
           popover: {
-            title: 'Create a board',
+            title: 'Créer un tableau',
             description:
-              'Click here to create a new board. Each board can contain multiple lists and cards.',
+              'Cliquez ici pour créer un nouveau tableau. Donnez-lui un nom (ex. nom de projet) puis validez. Vous pourrez ensuite y ajouter des listes et des cartes.',
             side: 'bottom',
             align: 'end'
           }
@@ -32,10 +32,20 @@ export function useTour() {
         {
           element: '[data-tour="boards-grid"]',
           popover: {
-            title: 'Your boards',
+            title: 'Vos tableaux',
             description:
-              'Your boards appear here. Click a board to open it and manage your lists and cards.',
+              "Tous vos tableaux s'affichent ici. Cliquez sur un tableau pour l'ouvrir. Au survol d'une carte, l'icône corbeille permet de supprimer le tableau (action irréversible).",
             side: 'top',
+            align: 'center'
+          }
+        },
+        {
+          element: '[data-tour="tour-trigger"]',
+          popover: {
+            title: 'Aide et rappel du guide',
+            description:
+              "Le bouton ? permet de revoir ce guide à tout moment. Utilisez-le si vous oubliez une fonctionnalité ou pour faire découvrir l'application à quelqu'un.",
+            side: 'left',
             align: 'center'
           }
         }
@@ -48,18 +58,29 @@ export function useTour() {
         {
           element: '[data-tour="back-board"]',
           popover: {
-            title: 'Back',
-            description: 'Return to the list of all your boards.',
+            title: 'Retour aux tableaux',
+            description:
+              "Revenir à la liste de tous vos tableaux sans quitter l'application.",
             side: 'bottom',
             align: 'start'
           }
         },
         {
+          element: '[data-tour="board-title"]',
+          popover: {
+            title: 'Nom du tableau',
+            description:
+              "Le nom du tableau s'affiche ici. Cliquez sur l'icône crayon pour le modifier directement.",
+            side: 'bottom',
+            align: 'center'
+          }
+        },
+        {
           element: '[data-tour="new-list"]',
           popover: {
-            title: 'New list',
+            title: 'Nouvelle liste',
             description:
-              'Add a list (e.g. "To do", "In progress", "Done"). Each list will contain cards.',
+              "Ajoutez une liste (ex. « À faire », « En cours », « Terminé »). Vous pouvez choisir un titre et une couleur. Les cartes seront créées à l'intérieur des listes.",
             side: 'bottom',
             align: 'end'
           }
@@ -67,10 +88,20 @@ export function useTour() {
         {
           element: '[data-tour="lists-area"]',
           popover: {
-            title: 'Lists and cards',
+            title: 'Listes et cartes',
             description:
-              'Drag and drop lists to reorder them, and cards between lists. Click a card to see details, labels and dates.',
+              "Glissez-déposez les listes pour les réordonner, et les cartes entre les listes pour mettre à jour l'avancement. Cliquez sur une carte pour voir ou modifier son détail : description, étiquettes (labels) et date d'échéance.",
             side: 'top',
+            align: 'center'
+          }
+        },
+        {
+          element: '[data-tour="tour-trigger"]',
+          popover: {
+            title: 'Revoir le guide',
+            description:
+              'Vous pouvez relancer ce guide à tout moment depuis le bouton ? dans la barre de navigation.',
+            side: 'left',
             align: 'center'
           }
         }
@@ -101,9 +132,9 @@ export function useTour() {
     driverInstance = driver({
       showProgress: true,
       progressText: '{{current}} / {{total}}',
-      nextBtnText: 'Next',
-      prevBtnText: 'Previous',
-      doneBtnText: 'Get started',
+      nextBtnText: 'Suivant',
+      prevBtnText: 'Précédent',
+      doneBtnText: "C'est parti",
       steps,
       overlayOpacity: 0.25,
       smoothScroll: true,
