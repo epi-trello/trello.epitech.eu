@@ -15,6 +15,13 @@ const { add } = useToast()
 const { data: _board, refresh } = await useFetch(`/api/boards/${params.id}`)
 const board = ref(_board.value)
 
+if (!_board.value) {
+  throw createError({
+    status: 404,
+    statusText: 'Page Not Found'
+  })
+}
+
 watch(_board, (newBoard) => {
   if (newBoard) {
     board.value = newBoard
@@ -271,6 +278,8 @@ async function onListDrop(dropResult: any) {
     }
   }
 }
+
+const membersModalOpen = ref(false)
 </script>
 
 <template>
@@ -333,7 +342,12 @@ async function onListDrop(dropResult: any) {
 
     <Teleport to="#navbar-right">
       <UModal title="Create a new list">
-        <UButton data-tour="new-list" icon="i-ph-plus" label="New list" />
+        <UButton
+          data-tour="new-list"
+          icon="i-ph-plus"
+          label="New list"
+          size="sm"
+        />
 
         <template #body="{ close }">
           <UForm
@@ -376,6 +390,30 @@ async function onListDrop(dropResult: any) {
           </UForm>
         </template>
       </UModal>
+
+      <UDropdownMenu
+        :items="[
+          {
+            label: 'Members',
+            icon: 'i-ph-users-three',
+            onSelect: () => (membersModalOpen = true)
+          }
+        ]"
+      >
+        <UButton
+          variant="ghost"
+          color="neutral"
+          size="sm"
+          icon="i-ph-dots-three"
+          class="ml-2"
+        />
+      </UDropdownMenu>
+
+      <Members
+        v-model:open="membersModalOpen"
+        :board="board!"
+        @change="refreshNuxtData"
+      />
     </Teleport>
   </ClientOnly>
 
@@ -512,25 +550,45 @@ async function onListDrop(dropResult: any) {
                       </UBadge>
                     </div>
                     <div
-                      v-if="card.dueDate"
-                      class="flex gap-1.5"
-                      :class="{
-                        'text-error': new Date(card.dueDate) <= new Date(),
-                        'text-warning':
-                          new Date(card.dueDate) > new Date() &&
-                          new Date(card.dueDate) <=
-                            new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                        'text-muted':
-                          new Date(card.dueDate) >
-                          new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
-                      }"
+                      v-if="card.dueDate || card.assignees.length"
+                      class="flex items-center justify-between gap-2 mt-2"
                     >
-                      <UIcon name="i-ph-alarm" size="xs" class="mt-2" />
-                      <NuxtTime
-                        :datetime="card.dueDate"
-                        locale="en-US"
-                        class="text-xs mt-2 block"
-                      />
+                      <div
+                        v-if="card.dueDate"
+                        class="flex gap-1.5"
+                        :class="{
+                          'text-error': new Date(card.dueDate) <= new Date(),
+                          'text-warning':
+                            new Date(card.dueDate) > new Date() &&
+                            new Date(card.dueDate) <=
+                              new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                          'text-muted':
+                            new Date(card.dueDate) >
+                            new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+                        }"
+                      >
+                        <UIcon name="i-ph-alarm" size="xs" />
+                        <NuxtTime
+                          :datetime="card.dueDate"
+                          locale="en-US"
+                          class="text-xs block"
+                        />
+                      </div>
+
+                      <UAvatarGroup
+                        size="xs"
+                        class="ml-auto"
+                        :max="3"
+                        :key="card.assignees.map((u) => u.id).join('-')"
+                      >
+                        <UAvatar
+                          v-for="assignee in card.assignees"
+                          :key="assignee.id"
+                          :src="assignee.image || undefined"
+                          :alt="assignee.name"
+                          icon="i-ph-user"
+                        />
+                      </UAvatarGroup>
                     </div>
                   </UCard>
                 </CardModal>

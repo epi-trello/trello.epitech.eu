@@ -6,9 +6,41 @@ export default defineEventHandler(async (event) => {
   }
 
   const id = getRouterParam(event, 'id')
-  const list = await prisma.list.delete({
-    where: { id, board: { ownerId: session.user.id } }
-  })
 
-  return list
+  if (!id) {
+    throw createError({ statusCode: 400, statusMessage: 'List ID is required' })
+  }
+
+  try {
+    const list = await prisma.list.delete({
+      where: {
+        id,
+        board: {
+          OR: [
+            { ownerId: session.user.id },
+            {
+              members: {
+                some: {
+                  userId: session.user.id,
+                  role: { in: ['ADMIN', 'MEMBER'] }
+                }
+              }
+            }
+          ]
+        }
+      }
+    })
+
+    return list
+  } catch (error: any) {
+    if (error.code === 'P2025') {
+      throw createError({
+        statusCode: 403,
+        statusMessage:
+          'Forbidden: You do not have permission to delete this list or it does not exist.'
+      })
+    }
+
+    throw error
+  }
 })

@@ -23,6 +23,41 @@ const { data: labels } = await useFetch(`/api/boards/${props.boardId}/labels`, {
     }))
 })
 
+const { data: members } = await useFetch(
+  `/api/boards/${props.boardId}/members`,
+  {
+    transform: (data) =>
+      data.map((member) => ({
+        value: member.id,
+        label: member.name,
+        avatar: {
+          src: member.image || undefined,
+          alt: member.name,
+          icon: 'i-ph-user'
+        }
+      }))
+  }
+)
+
+const selectedAssignees = ref<
+  | {
+      value: string
+      label: string
+      avatar: { src: string | undefined; alt: string; icon: string }
+    }[]
+  | undefined
+>(
+  card.value?.assignees.map((assignee) => ({
+    value: assignee.id,
+    label: assignee.name,
+    avatar: {
+      src: assignee.image || undefined,
+      alt: assignee.name,
+      icon: 'i-ph-user'
+    }
+  }))
+)
+
 const selectedLabels = ref<
   { value: string; label: string; color: string }[] | undefined
 >(
@@ -56,6 +91,38 @@ async function onCreateLabel(item: string) {
 
   await refresh()
   loadingLabel.value = false
+}
+
+async function setAssignees() {
+  const currentAssigneeIds =
+    card.value?.assignees.map((assignee) => assignee.id) || []
+  const selectedAssigneeIds =
+    selectedAssignees.value?.map((assignee) => assignee.value) || []
+
+  if (
+    JSON.stringify(currentAssigneeIds.sort()) ===
+    JSON.stringify(selectedAssigneeIds.sort())
+  ) {
+    return
+  }
+
+  try {
+    await $fetch(`/api/cards/${props.cardId}`, {
+      method: 'PATCH',
+      body: {
+        assignees: selectedAssignees.value?.map((assignee) => assignee.value)
+      }
+    })
+
+    emits('change')
+    await refresh()
+  } catch (error: any) {
+    add({
+      color: 'error',
+      title: 'Unable to set assignees',
+      description: error.message || 'An unexpected error occurred'
+    })
+  }
 }
 
 async function setLabels() {
@@ -190,6 +257,27 @@ async function setTitle() {
     })
   }
 }
+
+async function deleteCard() {
+  try {
+    await $fetch(`/api/cards/${props.cardId}`, {
+      method: 'DELETE'
+    })
+
+    emits('change')
+    add({
+      title: 'Card deleted',
+      description: 'The card has been deleted successfully.',
+      color: 'success'
+    })
+  } catch (error: any) {
+    add({
+      title: 'Error while deleting card',
+      description: error.message || 'Unable to delete the card.',
+      color: 'error'
+    })
+  }
+}
 </script>
 
 <template>
@@ -235,7 +323,18 @@ async function setTitle() {
             Actions
           </p>
           <nav class="flex flex-col gap-1.5">
-            <label class="text-xs font-medium"> Labels </label>
+            <label class="text-xs font-medium">Assignees</label>
+            <USelectMenu
+              v-model="selectedAssignees"
+              :avatar="selectedAssignees?.[0]?.avatar"
+              :items="members"
+              size="sm"
+              multiple
+              class="w-full"
+              placeholder="Select assignees"
+              @update:model-value="setAssignees"
+            />
+            <label class="text-xs font-medium">Labels</label>
             <USelectMenu
               v-model="selectedLabels"
               size="sm"
@@ -276,7 +375,7 @@ async function setTitle() {
                 <span class="ml-1">{{ item }}</span>
               </template>
             </USelectMenu>
-            <label class="text-xs font-medium"> Start Date </label>
+            <label class="text-xs font-medium">Start Date</label>
             <UInputDate
               ref="startDateRef"
               v-model="startDate"
@@ -338,6 +437,7 @@ async function setTitle() {
               color="error"
               icon="i-ph-trash"
               label="Delete"
+              @click="deleteCard"
             />
           </nav>
         </div>
