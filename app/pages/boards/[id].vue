@@ -412,7 +412,7 @@ const membersModalOpen = ref(false)
       <Members
         v-model:open="membersModalOpen"
         :board="board!"
-        @change="refresh"
+        @change="refreshNuxtData"
       />
     </Teleport>
   </ClientOnly>

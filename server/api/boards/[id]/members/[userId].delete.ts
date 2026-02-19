@@ -1,5 +1,6 @@
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession(event)
+
   if (!session) {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
@@ -13,42 +14,53 @@ export default defineEventHandler(async (event) => {
 
   const board = await prisma.board.findUnique({
     where: { id: boardId },
-    include: {
-      members: {
-        where: { userId: session.user.id }
-      }
-    }
+    include: { members: { where: { userId: session.user.id } } }
   })
 
-  if (!board) {
+  if (!board)
     throw createError({ statusCode: 404, statusMessage: 'Board not found' })
-  }
-
-  if (targetUserId === board.ownerId) {
+  if (targetUserId === board.ownerId)
     throw createError({
       statusCode: 403,
-      statusMessage: 'The board owner cannot be removed.'
+      statusMessage: 'Owner cannot be removed.'
     })
-  }
 
   const isSelfLeaving = targetUserId === session.user.id
   const isOwner = board.ownerId === session.user.id
   const isAdmin = board.members[0]?.role === 'ADMIN'
 
   if (!isSelfLeaving && !isOwner && !isAdmin) {
-    throw createError({
-      statusCode: 403,
-      statusMessage: 'Forbidden: You do not have permission to remove members.'
-    })
+    throw createError({ statusCode: 403, statusMessage: 'Forbidden' })
   }
 
   try {
-    await prisma.boardMember.delete({
+    const cardsToUnassign = await prisma.card.findMany({
       where: {
-        boardId_userId: {
-          boardId: boardId,
-          userId: targetUserId
+        list: { boardId: boardId },
+        assignees: { some: { id: targetUserId } }
+      },
+      select: { id: true }
+    })
+
+    await prisma.$transaction(async (tx) => {
+      await tx.boardMember.delete({
+        where: {
+          boardId_userId: {
+            boardId: boardId,
+            userId: targetUserId
+          }
         }
+      })
+
+      if (cardsToUnassign.length > 0) {
+        await tx.user.update({
+          where: { id: targetUserId },
+          data: {
+            assignedCards: {
+              disconnect: cardsToUnassign
+            }
+          }
+        })
       }
     })
 
