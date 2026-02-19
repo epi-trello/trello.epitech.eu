@@ -173,6 +173,7 @@ model Label {
 
   cards     Card[]
 
+  @@unique([name, boardId])
   @@map("label")
 }
 
