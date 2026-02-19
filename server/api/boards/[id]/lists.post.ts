@@ -1,5 +1,7 @@
 import { generateId } from 'better-auth'
 
+const POSITION_GAP = 1000
+
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession(event)
 
@@ -27,11 +29,45 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  const isAuthorized = await prisma.board.findFirst({
+    where: {
+      id: boardId,
+      OR: [
+        { ownerId: session.user.id },
+        {
+          members: {
+            some: {
+              userId: session.user.id,
+              role: { in: ['ADMIN', 'MEMBER'] }
+            }
+          }
+        }
+      ]
+    },
+    select: { id: true }
+  })
+
+  if (!isAuthorized) {
+    throw createError({
+      statusCode: 403,
+      statusMessage:
+        'Forbidden: You do not have permission to create lists on this board.'
+    })
+  }
+
+  const aggregation = await prisma.list.aggregate({
+    _max: { position: true },
+    where: { boardId }
+  })
+
+  const currentMax = aggregation._max.position || 0
+  const newPosition = currentMax + POSITION_GAP
+
   const list = await prisma.list.create({
     data: {
       id: generateId(),
       title: data.title,
-      position: data.position,
+      position: newPosition,
       color: data.color,
       boardId
     }

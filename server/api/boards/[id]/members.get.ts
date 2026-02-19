@@ -15,9 +15,7 @@ export default defineEventHandler(async (event) => {
 
   const owner = await prisma.board.findUnique({
     where: { id },
-    select: {
-      owner: true
-    }
+    select: { owner: true }
   })
 
   if (!owner) {

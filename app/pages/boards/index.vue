@@ -79,7 +79,12 @@ async function deleteBoard(boardId: string, next?: () => void) {
   <ClientOnly>
     <Teleport to="#navbar-right">
       <UModal title="Create a new board" @update:open="state.name = undefined">
-        <UButton data-tour="create-board" icon="i-ph-plus" label="Create" />
+        <UButton
+          data-tour="create-board"
+          icon="i-ph-plus"
+          label="Create"
+          size="sm"
+        />
 
         <template #body="{ close }">
           <UForm

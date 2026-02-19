@@ -5,6 +5,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
+  const id = getRouterParam(event, 'id')
+
+  if (!id) {
+    throw createError({ statusCode: 400, statusMessage: 'List ID is required' })
+  }
+
   const { data, error } = await readValidatedBody(
     event,
     ListInputSchema.partial().safeParse
@@ -19,11 +25,37 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const id = getRouterParam(event, 'id')
-  const list = await prisma.list.update({
-    where: { id, board: { ownerId: session.user.id } },
-    data
-  })
+  try {
+    const list = await prisma.list.update({
+      where: {
+        id,
+        board: {
+          OR: [
+            { ownerId: session.user.id },
+            {
+              members: {
+                some: {
+                  userId: session.user.id,
+                  role: { in: ['ADMIN', 'MEMBER'] }
+                }
+              }
+            }
+          ]
+        }
+      },
+      data
+    })
 
-  return list
+    return list
+  } catch (error: any) {
+    if (error.code === 'P2025') {
+      throw createError({
+        statusCode: 403,
+        statusMessage:
+          'Forbidden: You do not have permission to modify this list or it does not exist.'
+      })
+    }
+
+    throw error
+  }
 })

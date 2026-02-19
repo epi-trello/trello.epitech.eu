@@ -257,6 +257,27 @@ async function setTitle() {
     })
   }
 }
+
+async function deleteCard() {
+  try {
+    await $fetch(`/api/cards/${props.cardId}`, {
+      method: 'DELETE'
+    })
+
+    emits('change')
+    add({
+      title: 'Card deleted',
+      description: 'The card has been deleted successfully.',
+      color: 'success'
+    })
+  } catch (error: any) {
+    add({
+      title: 'Error while deleting card',
+      description: error.message || 'Unable to delete the card.',
+      color: 'error'
+    })
+  }
+}
 </script>
 
 <template>
@@ -416,6 +437,7 @@ async function setTitle() {
               color="error"
               icon="i-ph-trash"
               label="Delete"
+              @click="deleteCard"
             />
           </nav>
         </div>

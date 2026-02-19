@@ -27,6 +27,32 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  const isAuthorized = await prisma.board.findFirst({
+    where: {
+      id: boardId,
+      OR: [
+        { ownerId: session.user.id },
+        {
+          members: {
+            some: {
+              userId: session.user.id,
+              role: { in: ['ADMIN', 'MEMBER'] }
+            }
+          }
+        }
+      ]
+    },
+    select: { id: true }
+  })
+
+  if (!isAuthorized) {
+    throw createError({
+      statusCode: 403,
+      statusMessage:
+        'Forbidden: You do not have permission to create labels on this board.'
+    })
+  }
+
   const label = await prisma.label.create({
     data: {
       id: generateId(),

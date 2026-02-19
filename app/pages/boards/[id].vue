@@ -15,6 +15,13 @@ const { add } = useToast()
 const { data: _board, refresh } = await useFetch(`/api/boards/${params.id}`)
 const board = ref(_board.value)
 
+if (!_board.value) {
+  throw createError({
+    status: 404,
+    statusText: 'Page Not Found'
+  })
+}
+
 watch(_board, (newBoard) => {
   if (newBoard) {
     board.value = newBoard
@@ -335,7 +342,12 @@ const membersModalOpen = ref(false)
 
     <Teleport to="#navbar-right">
       <UModal title="Create a new list">
-        <UButton data-tour="new-list" icon="i-ph-plus" label="New list" />
+        <UButton
+          data-tour="new-list"
+          icon="i-ph-plus"
+          label="New list"
+          size="sm"
+        />
 
         <template #body="{ close }">
           <UForm
@@ -397,7 +409,11 @@ const membersModalOpen = ref(false)
         />
       </UDropdownMenu>
 
-      <Members v-model:open="membersModalOpen" :board="board!" />
+      <Members
+        v-model:open="membersModalOpen"
+        :board="board!"
+        @change="refresh"
+      />
     </Teleport>
   </ClientOnly>
 

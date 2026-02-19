@@ -7,7 +7,15 @@ export default defineEventHandler(async (event) => {
 
   const boardId = getRouterParam(event, 'id')
   const lists = await prisma.list.findMany({
-    where: { boardId, board: { ownerId: session.user.id } },
+    where: {
+      boardId,
+      board: {
+        OR: [
+          { ownerId: session.user.id },
+          { members: { some: { userId: session.user.id } } }
+        ]
+      }
+    },
     include: { cards: { include: { labels: true } } }
   })
 

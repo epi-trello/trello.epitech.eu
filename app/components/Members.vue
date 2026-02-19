@@ -9,6 +9,10 @@ const props = defineProps<{
   board: NonNullable<InternalApi['/api/boards/:id']['get']>
 }>()
 
+const emits = defineEmits<{
+  change: []
+}>()
+
 const { add } = useToast()
 const { user } = useAuth()
 
@@ -19,6 +23,14 @@ const state = reactive({
 const schema = z.object({
   email: z.email({ message: 'Please enter a valid email address' })
 })
+
+const { data: me } = await useFetch(`/api/boards/${props.board.id}/me`)
+
+const roles = [
+  { label: 'Admin', value: 'ADMIN' },
+  { label: 'Member', value: 'MEMBER' },
+  { label: 'Viewer', value: 'VIEWER' }
+]
 
 type Schema = z.output<typeof schema>
 
@@ -33,14 +45,61 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
 
     state.email = ''
 
+    emits('change')
     add({
-      title: 'Invitation sent',
-      description: 'The user has been invited to the board.',
+      title: 'User invited',
+      description:
+        'The user has been added as a member to the board successfully.',
       color: 'success'
     })
   } catch (error: any) {
     add({
       title: 'Error while inviting user',
+      description: error.message,
+      color: 'error'
+    })
+  }
+}
+
+async function updateMemberRole(userId: string, newRole: string) {
+  try {
+    await $fetch(`/api/boards/${props.board.id}/members/${userId}`, {
+      method: 'PATCH',
+      body: {
+        role: newRole
+      }
+    })
+
+    emits('change')
+    add({
+      title: 'Role updated',
+      description: "The member's role has been updated successfully.",
+      color: 'success'
+    })
+  } catch (error: any) {
+    add({
+      title: 'Error while updating role',
+      description: error.message,
+      color: 'error'
+    })
+  }
+}
+
+async function removeMember(userId: string) {
+  try {
+    await $fetch(`/api/boards/${props.board.id}/members/${userId}`, {
+      method: 'DELETE'
+    })
+
+    emits('change')
+    add({
+      title: 'Member removed',
+      description: 'The member has been removed from the board successfully.',
+      color: 'success'
+    })
+  } catch (error: any) {
+    add({
+      title: 'Error while removing member',
       description: error.message,
       color: 'error'
     })
@@ -58,7 +117,7 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
       <p class="text-sm">Invite new members to collaborate on this board.</p>
 
       <UForm
-        :disabled="board.owner.id !== user?.id"
+        :disabled="!me?.permissions.canManageMembers"
         :schema="schema"
         :state="state"
         @submit="onSubmit"
@@ -72,7 +131,7 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
           />
         </UFormField>
         <UButton
-          :disabled="board.owner.id !== user?.id"
+          :disabled="!me?.permissions.canManageMembers"
           type="submit"
           label="Invite"
           loading-auto
@@ -95,9 +154,15 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
               }"
             />
 
-            <UBadge variant="outline" color="neutral" size="sm" class="ml-auto">
+            <UButton
+              variant="outline"
+              color="neutral"
+              size="sm"
+              disabled
+              class="ml-auto"
+            >
               Owner
-            </UBadge>
+            </UButton>
           </template>
         </UPageCard>
         <UPageCard
@@ -116,9 +181,27 @@ async function onSubmit({ data }: FormSubmitEvent<Schema>) {
                 icon: 'i-ph-user'
               }"
             />
-            <UBadge variant="outline" color="neutral" size="sm" class="ml-auto">
-              {{ member.role.at(0) + member.role.slice(1).toLowerCase() }}
-            </UBadge>
+
+            <USelect
+              v-model="member.role"
+              :items="roles"
+              size="sm"
+              class="ml-auto w-28"
+              :disabled="
+                !me?.permissions.canManageMembers || member.user.id === user?.id
+              "
+              @update:model-value="updateMemberRole(member.userId, $event)"
+            />
+
+            <UButton
+              color="error"
+              size="sm"
+              icon="i-ph-trash"
+              :disabled="
+                !me?.permissions.canManageMembers || member.user.id === user?.id
+              "
+              @click="removeMember(member.userId)"
+            />
           </template>
         </UPageCard>
       </UPageList>
