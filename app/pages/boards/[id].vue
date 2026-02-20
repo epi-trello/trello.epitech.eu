@@ -297,7 +297,10 @@ const membersModalOpen = ref(false)
     </Teleport>
 
     <Teleport to="#navbar-center">
-      <h1 class="flex items-center gap-2 min-w-0 truncate">
+      <h1
+        class="flex items-center gap-2 min-w-0 truncate"
+        data-tour="board-title"
+      >
         <template v-if="isEditingBoardName">
           <UInput
             v-model="boardNameEdit"
