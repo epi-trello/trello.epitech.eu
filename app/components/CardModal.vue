@@ -368,7 +368,10 @@ async function deleteCard() {
             >
               <UIcon name="i-ph-chat-circle-text" class="size-4" />
               Commentaires
-              <span v-if="card?.comments?.length" class="font-normal text-muted">
+              <span
+                v-if="card?.comments?.length"
+                class="font-normal text-muted"
+              >
                 ({{ card.comments.length }})
               </span>
             </h2>
@@ -391,7 +394,9 @@ async function deleteCard() {
                 >
                   Envoyer
                 </UButton>
-                <p v-if="commentError" class="text-sm text-error">{{ commentError }}</p>
+                <p v-if="commentError" class="text-sm text-error">
+                  {{ commentError }}
+                </p>
               </div>
             </form>
 
@@ -409,8 +414,12 @@ async function deleteCard() {
                 />
                 <div class="min-w-0 flex-1">
                   <div class="mb-1 flex items-center gap-2 text-xs">
-                    <span class="font-medium">{{ comment.user?.name ?? 'Utilisateur' }}</span>
-                    <span class="text-muted">{{ formatCommentDate(comment.createdAt) }}</span>
+                    <span class="font-medium">{{
+                      comment.user?.name ?? 'Utilisateur'
+                    }}</span>
+                    <span class="text-muted">{{
+                      formatCommentDate(comment.createdAt)
+                    }}</span>
                   </div>
                   <p class="whitespace-pre-wrap text-sm">{{ comment.text }}</p>
                 </div>

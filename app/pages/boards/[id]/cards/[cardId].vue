@@ -7,7 +7,12 @@ const route = useRoute()
 const boardId = route.params.id as string
 const cardId = route.params.cardId as string
 
-const { data: card, pending, error, refresh } = await useFetch(`/api/cards/${cardId}`)
+const {
+  data: card,
+  pending,
+  error,
+  refresh
+} = await useFetch(`/api/cards/${cardId}`)
 
 const backUrl = `/boards/${boardId}`
 
@@ -31,7 +36,8 @@ async function submitComment() {
     await refresh()
   } catch (e: unknown) {
     commentError.value =
-      (e as { data?: { message?: string } })?.data?.message ?? 'Erreur lors de l\'envoi du commentaire.'
+      (e as { data?: { message?: string } })?.data?.message ??
+      "Erreur lors de l'envoi du commentaire."
   } finally {
     isSubmittingComment.value = false
   }
@@ -44,11 +50,15 @@ function formatCommentDate(createdAt: string) {
   const diffMins = Math.floor(diffMs / 60_000)
   const diffHours = Math.floor(diffMs / 3_600_000)
   const diffDays = Math.floor(diffMs / 86_400_000)
-  if (diffMins < 1) return 'À l\'instant'
+  if (diffMins < 1) return "À l'instant"
   if (diffMins < 60) return `Il y a ${diffMins} min`
   if (diffHours < 24) return `Il y a ${diffHours} h`
   if (diffDays < 7) return `Il y a ${diffDays} j`
-  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined })
+  return d.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+  })
 }
 </script>
 
@@ -123,7 +133,9 @@ function formatCommentDate(createdAt: string) {
 
           <!-- Commentaires -->
           <section class="mb-6">
-            <h2 class="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-400">
+            <h2
+              class="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-400"
+            >
               <UIcon name="i-ph-chat-circle-text" class="size-4" />
               Commentaires
               <span v-if="card?.comments?.length" class="text-gray-500">
@@ -149,7 +161,9 @@ function formatCommentDate(createdAt: string) {
                 >
                   Envoyer
                 </UButton>
-                <p v-if="commentError" class="text-sm text-red-400">{{ commentError }}</p>
+                <p v-if="commentError" class="text-sm text-red-400">
+                  {{ commentError }}
+                </p>
               </div>
             </form>
 
@@ -167,10 +181,16 @@ function formatCommentDate(createdAt: string) {
                 />
                 <div class="min-w-0 flex-1">
                   <div class="mb-1 flex items-center gap-2 text-xs">
-                    <span class="font-medium text-gray-200">{{ comment.user?.name ?? 'Utilisateur' }}</span>
-                    <span class="text-gray-500">{{ formatCommentDate(comment.createdAt) }}</span>
+                    <span class="font-medium text-gray-200">{{
+                      comment.user?.name ?? 'Utilisateur'
+                    }}</span>
+                    <span class="text-gray-500">{{
+                      formatCommentDate(comment.createdAt)
+                    }}</span>
                   </div>
-                  <p class="whitespace-pre-wrap text-sm text-gray-300">{{ comment.text }}</p>
+                  <p class="whitespace-pre-wrap text-sm text-gray-300">
+                    {{ comment.text }}
+                  </p>
                 </div>
               </div>
             </div>
