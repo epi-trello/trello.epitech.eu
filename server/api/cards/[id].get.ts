@@ -18,7 +18,11 @@ export default defineEventHandler(async (event) => {
         }
       }
     },
-    include: { labels: true, assignees: true }
+    include: {
+      comments: { orderBy: { createdAt: 'desc' } },
+      labels: true,
+      assignees: true
+    }
   })
 
   return card
