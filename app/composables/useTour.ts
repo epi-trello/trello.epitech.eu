@@ -1,9 +1,12 @@
 import { driver, type DriveStep, type Driver } from 'driver.js'
 
 const TOUR_STORAGE_KEY = 'epitrello-tour-done'
+const HIGHLIGHT_CLASS = 'tour-step-highlighted'
 
 export function useTour() {
   let driverInstance: Driver | null = null
+  let completedFromLastStep = false
+  let documentClickHandler: ((e: MouseEvent) => void) | null = null
 
   const stepsByPath = (path: string): DriveStep[] => {
     // Boards list page
@@ -14,9 +17,10 @@ export function useTour() {
           popover: {
             title: 'Bienvenue sur Epitrello',
             description:
-              'Votre tableau de bord : accédez à vos tableaux (Boards) et aux paramètres depuis cette barre. Chaque tableau contient des listes (To do, En cours…) et des cartes à organiser.',
+              'Votre tableau de bord : accédez à vos tableaux (Boards) et aux paramètres depuis cette barre. Chaque tableau contient des listes (To do, En cours…) et des cartes à organiser.<br><br><strong>⌨️ Raccourcis</strong> : flèches ← → pour naviguer, Échap pour fermer. Cliquez sur la zone sombre pour passer à l’étape suivante.',
             side: 'right',
-            align: 'start'
+            align: 'start',
+            popoverClass: 'driver-popover--welcome'
           }
         },
         {
@@ -24,7 +28,7 @@ export function useTour() {
           popover: {
             title: 'Créer un tableau',
             description:
-              'Cliquez ici pour créer un nouveau tableau. Donnez-lui un nom (ex. nom de projet) puis validez. Vous pourrez ensuite y ajouter des listes et des cartes.',
+              'Cliquez ici pour créer un nouveau tableau. Donnez-lui un nom (ex. nom de projet) puis validez. Vous pourrez ensuite y ajouter des listes et des cartes.<br><br>💡 <em>Astuce</em> : vous pouvez cliquer sur l’élément mis en avant pour essayer tout de suite.',
             side: 'bottom',
             align: 'end'
           }
@@ -42,11 +46,12 @@ export function useTour() {
         {
           element: '[data-tour="tour-trigger"]',
           popover: {
-            title: 'Aide et rappel du guide',
+            title: 'Vous êtes prêt !',
             description:
-              "Le bouton ? permet de revoir ce guide à tout moment. Utilisez-le si vous oubliez une fonctionnalité ou pour faire découvrir l'application à quelqu'un.",
+              'Résumé : tableaux → listes → cartes, glisser-déposer pour réorganiser, clic sur une carte pour les détails (labels, date d’échéance). Le bouton ? permet de revoir ce guide à tout moment.',
             side: 'left',
-            align: 'center'
+            align: 'center',
+            doneBtnText: "J'ai compris !"
           }
         }
       ]
@@ -90,7 +95,7 @@ export function useTour() {
           popover: {
             title: 'Listes et cartes',
             description:
-              "Glissez-déposez les listes pour les réordonner, et les cartes entre les listes pour mettre à jour l'avancement. Cliquez sur une carte pour voir ou modifier son détail : description, étiquettes (labels) et date d'échéance.",
+              "Glissez-déposez les listes pour les réordonner, et les cartes entre les listes pour mettre à jour l'avancement. Cliquez sur une carte pour voir ou modifier son détail : description, étiquettes (labels) et date d'échéance.<br><br>💡 <em>Astuce</em> : le glisser-déposer fonctionne aussi au clavier dans la plupart des navigateurs.",
             side: 'top',
             align: 'center'
           }
@@ -98,11 +103,12 @@ export function useTour() {
         {
           element: '[data-tour="tour-trigger"]',
           popover: {
-            title: 'Revoir le guide',
+            title: 'Vous êtes prêt !',
             description:
-              'Vous pouvez relancer ce guide à tout moment depuis le bouton ? dans la barre de navigation.',
+              'Résumé : nom du tableau modifiable au crayon, listes avec couleurs, cartes avec labels et dates. Le bouton ? permet de revoir ce guide à tout moment.',
             side: 'left',
-            align: 'center'
+            align: 'center',
+            doneBtnText: "J'ai compris !"
           }
         }
       ]
@@ -129,20 +135,76 @@ export function useTour() {
       driverInstance.destroy()
     }
 
+    completedFromLastStep = false
+
     driverInstance = driver({
       showProgress: true,
       progressText: '{{current}} / {{total}}',
       nextBtnText: 'Suivant',
       prevBtnText: 'Précédent',
-      doneBtnText: "C'est parti",
+      doneBtnText: "J'ai compris !",
       steps,
-      overlayOpacity: 0.25,
+      overlayOpacity: 0.3,
       smoothScroll: true,
       allowClose: true,
+      allowKeyboardControl: true,
+      overlayClickBehavior: 'nextStep',
+      stagePadding: 12,
+      stageRadius: 8,
+      animate: true,
+      onPopoverRender(popover, { state, driver: dr }) {
+        if (state.activeIndex === 0) {
+          const skipBtn = document.createElement('button')
+          skipBtn.type = 'button'
+          skipBtn.className = 'driver-popover-skip-btn'
+          skipBtn.textContent = 'Passer le guide'
+          skipBtn.addEventListener('click', () => {
+            try {
+              localStorage.setItem(TOUR_STORAGE_KEY, 'true')
+            } catch {
+              // ignore
+            }
+            dr.destroy()
+          })
+          popover.footer.insertBefore(skipBtn, popover.footerButtons)
+        }
+      },
+      onHighlighted(element, _step, { state: s }) {
+        if (element) element.classList.add(HIGHLIGHT_CLASS)
+      },
+      onDeselected(element) {
+        if (element) element.classList.remove(HIGHLIGHT_CLASS)
+      },
+      onDestroyStarted(_element, _step, { state: s, driver: dr }) {
+        if (s.activeIndex === steps.length - 1) completedFromLastStep = true
+        // onDestroyStarted interrompt la destruction : il faut appeler dr.destroy()
+        // pour que la croix et "J'ai compris" ferment réellement le tour
+        dr.destroy()
+      },
       onDestroyed: () => {
+        if (documentClickHandler) {
+          document.body.removeEventListener(
+            'click',
+            documentClickHandler as EventListener,
+            true
+          )
+          documentClickHandler = null
+        }
         if (!force) {
           try {
             localStorage.setItem(TOUR_STORAGE_KEY, 'true')
+          } catch {
+            // ignore
+          }
+        }
+        if (completedFromLastStep) {
+          try {
+            useToast().add({
+              title: 'Guide terminé',
+              description:
+                'Vous pouvez relancer le guide avec le bouton ? à tout moment.',
+              color: 'success'
+            })
           } catch {
             // ignore
           }
@@ -151,6 +213,35 @@ export function useTour() {
     })
 
     driverInstance.drive()
+
+    documentClickHandler = (e: MouseEvent) => {
+      const dr = driverInstance
+      if (!dr?.isActive()) return
+      const target = e.target as Element
+      if (target.closest('.driver-popover-close-btn')) {
+        e.preventDefault()
+        e.stopPropagation()
+        dr.destroy()
+        return
+      }
+      if (target.closest('.driver-popover-next-btn')) {
+        e.preventDefault()
+        e.stopPropagation()
+        if (dr.hasNextStep()) dr.moveNext()
+        else dr.destroy()
+        return
+      }
+      if (target.closest('.driver-popover-prev-btn')) {
+        e.preventDefault()
+        e.stopPropagation()
+        dr.movePrevious()
+      }
+    }
+    document.body.addEventListener(
+      'click',
+      documentClickHandler as EventListener,
+      true
+    )
   }
 
   function markTourAsNotDone() {
