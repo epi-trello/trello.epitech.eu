@@ -10,6 +10,7 @@ const emits = defineEmits<{
   change: []
 }>()
 
+const { user } = useAuth()
 const { add } = useToast()
 
 const { data: card, refresh } = await useFetch(`/api/cards/${props.cardId}`)
@@ -208,6 +209,47 @@ const dueDate = shallowRef<CalendarDate | undefined>(
 
 const description = ref(card.value?.description || '')
 
+const newCommentText = ref('')
+const isSubmittingComment = ref(false)
+const commentError = ref<string | null>(null)
+
+async function submitComment() {
+  const text = newCommentText.value.trim()
+  if (!text || isSubmittingComment.value) return
+
+  isSubmittingComment.value = true
+  commentError.value = null
+  try {
+    await $fetch(`/api/cards/${props.cardId}/comments`, {
+      method: 'POST',
+      body: { text }
+    })
+    newCommentText.value = ''
+    await refresh()
+  } catch (e: unknown) {
+    commentError.value =
+      (e as { data?: { message?: string } })?.data?.message ??
+      "Erreur lors de l'envoi du commentaire."
+  } finally {
+    isSubmittingComment.value = false
+  }
+}
+
+async function deleteComment(commentId: string) {
+  try {
+    await $fetch(`/api/cards/${props.cardId}/comments/${commentId}`, {
+      method: 'DELETE'
+    })
+    await refresh()
+  } catch (e: any) {
+    add({
+      color: 'error',
+      title: 'Unable to delete comment',
+      description: e.message || 'An unexpected error occurred'
+    })
+  }
+}
+
 async function setDescription() {
   if (description.value === card.value?.description) {
     return
@@ -315,6 +357,79 @@ async function deleteCard() {
             class="w-full"
             @blur="setDescription"
           />
+
+          <!-- Commentaires -->
+          <section class="mt-6">
+            <h2
+              class="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted"
+            >
+              <UIcon name="i-ph-chat-circle-text" class="size-4" />
+              Commentaires
+              <span
+                v-if="card?.comments?.length"
+                class="font-normal text-muted"
+              >
+                ({{ card.comments.length }})
+              </span>
+            </h2>
+
+            <form @submit.prevent="submitComment" class="mb-4 space-y-2">
+              <UTextarea
+                v-model="newCommentText"
+                placeholder="Écrire un commentaire…"
+                :rows="2"
+                :disabled="isSubmittingComment"
+                class="resize-none w-full"
+                autoresize
+              />
+              <div class="flex items-center gap-2">
+                <UButton
+                  type="submit"
+                  size="sm"
+                  :loading="isSubmittingComment"
+                  :disabled="!newCommentText.trim()"
+                >
+                  Envoyer
+                </UButton>
+                <p v-if="commentError" class="text-sm text-error">
+                  {{ commentError }}
+                </p>
+              </div>
+            </form>
+
+            <div v-if="card?.comments?.length" class="space-y-3">
+              <div
+                v-for="comment in card.comments"
+                :key="comment.id"
+                class="relative flex gap-3 rounded-lg bg-elevated p-3"
+              >
+                <UButton
+                  v-if="comment.userId === user?.id"
+                  icon="i-ph-trash"
+                  size="xs"
+                  color="neutral"
+                  variant="link"
+                  @click="deleteComment(comment.id)"
+                  class="absolute top-2 right-2"
+                />
+                <UAvatar
+                  :src="comment.user?.image ?? undefined"
+                  :alt="comment.user?.name ?? 'Avatar'"
+                  size="sm"
+                  class="shrink-0"
+                />
+                <div class="min-w-0 flex-1">
+                  <div class="mb-1 flex items-center gap-2 text-xs">
+                    <span class="font-medium">
+                      {{ comment.user?.name ?? 'Utilisateur' }}
+                    </span>
+                    <NuxtTime :datetime="comment.createdAt" relative />
+                  </div>
+                  <p class="whitespace-pre-wrap text-sm">{{ comment.text }}</p>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
         <div class="w-50 shrink-0 border-l border-default pl-6 ml-6">
           <p

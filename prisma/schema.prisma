@@ -29,6 +29,7 @@ model User {
   ownedBoards   Board[]       @relation("BoardOwner")
   memberships   BoardMember[]
   assignedCards Card[]        @relation("CardAssignees")
+  comments      Comment[]
   // sentInvites   BoardInvite[]
 
   @@unique([email])
@@ -156,10 +157,25 @@ model Card {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  comments    Comment[]
   labels      Label[]
-  assignees    User[]    @relation("CardAssignees")
+  assignees   User[]    @relation("CardAssignees")
 
   @@map("card")
+}
+
+model Comment {
+  id        String    @id
+  text      String
+  cardId    String
+  card      Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([cardId])
+  @@map("comment")
 }
 
 model Label {
