@@ -10,6 +10,7 @@ const emits = defineEmits<{
   change: []
 }>()
 
+const { user } = useAuth()
 const { add } = useToast()
 
 const { data: card, refresh } = await useFetch(`/api/cards/${props.cardId}`)
@@ -208,7 +209,6 @@ const dueDate = shallowRef<CalendarDate | undefined>(
 
 const description = ref(card.value?.description || '')
 
-// Commentaires
 const newCommentText = ref('')
 const isSubmittingComment = ref(false)
 const commentError = ref<string | null>(null)
@@ -235,22 +235,19 @@ async function submitComment() {
   }
 }
 
-function formatCommentDate(createdAt: string) {
-  const d = new Date(createdAt)
-  const now = new Date()
-  const diffMs = now.getTime() - d.getTime()
-  const diffMins = Math.floor(diffMs / 60_000)
-  const diffHours = Math.floor(diffMs / 3_600_000)
-  const diffDays = Math.floor(diffMs / 86_400_000)
-  if (diffMins < 1) return "À l'instant"
-  if (diffMins < 60) return `Il y a ${diffMins} min`
-  if (diffHours < 24) return `Il y a ${diffHours} h`
-  if (diffDays < 7) return `Il y a ${diffDays} j`
-  return d.toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'short',
-    year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
-  })
+async function deleteComment(commentId: string) {
+  try {
+    await $fetch(`/api/cards/${props.cardId}/comments/${commentId}`, {
+      method: 'DELETE'
+    })
+    await refresh()
+  } catch (e: any) {
+    add({
+      color: 'error',
+      title: 'Unable to delete comment',
+      description: e.message || 'An unexpected error occurred'
+    })
+  }
 }
 
 async function setDescription() {
@@ -404,8 +401,17 @@ async function deleteCard() {
               <div
                 v-for="comment in card.comments"
                 :key="comment.id"
-                class="flex gap-3 rounded-lg bg-elevated p-3"
+                class="relative flex gap-3 rounded-lg bg-elevated p-3"
               >
+                <UButton
+                  v-if="comment.userId === user?.id"
+                  icon="i-ph-trash"
+                  size="xs"
+                  color="neutral"
+                  variant="link"
+                  @click="deleteComment(comment.id)"
+                  class="absolute top-2 right-2"
+                />
                 <UAvatar
                   :src="comment.user?.image ?? undefined"
                   :alt="comment.user?.name ?? 'Avatar'"
@@ -414,12 +420,10 @@ async function deleteCard() {
                 />
                 <div class="min-w-0 flex-1">
                   <div class="mb-1 flex items-center gap-2 text-xs">
-                    <span class="font-medium">{{
-                      comment.user?.name ?? 'Utilisateur'
-                    }}</span>
-                    <span class="text-muted">{{
-                      formatCommentDate(comment.createdAt)
-                    }}</span>
+                    <span class="font-medium">
+                      {{ comment.user?.name ?? 'Utilisateur' }}
+                    </span>
+                    <NuxtTime :datetime="comment.createdAt" relative />
                   </div>
                   <p class="whitespace-pre-wrap text-sm">{{ comment.text }}</p>
                 </div>
