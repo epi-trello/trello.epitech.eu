@@ -9,6 +9,7 @@ Practical project documentation: stack, setup, structure, API and conventions.
 **Epitrello** is a Kanban-style application (boards → lists → cards) with authentication.
 
 - **Stack**: Nuxt 4, Vue 3, Nuxt UI, Prisma, PostgreSQL, better-auth, Zod, driver.js (tour guide), vue3-smooth-dnd (drag & drop).
+- **Real-time** : Server-Sent Events (SSE) pour collaboration en temps réel sur les boards.
 - **Auth**: better-auth (email/password, sessions, Prisma adapter).
 - **UI**: Nuxt UI 4, Epitech theme (primary color), dashboard layout for protected pages.
 
@@ -74,7 +75,7 @@ Other useful commands:
 │   └── utils/           # Helpers (getColors, etc.)
 ├── server/
 │   ├── api/             # API handlers (see § 6)
-│   └── utils/           # auth.ts (better-auth + Prisma), schema.ts (Zod)
+│   └── utils/           # auth.ts, schema.ts, realtime.ts (broadcast SSE)
 ├── prisma/
 │   ├── schema.prisma    # Models and enums
 │   └── generated/       # Generated Prisma client
@@ -170,9 +171,17 @@ To create/update schema in dev: `pnpm db:push`. For versioned migrations, config
 
 - **Layouts**: `default` (landing, header), `dashboard` (sidebar + navbar, used for /boards, /boards/:id, /settings).
 - **Pages**: file-based routing under `app/pages/` (index, login, sign-up, boards, boards/[id], boards/[id]/cards/[cardId], settings).
-- **Composables**: `useAuth()`, `usePageTitle()`, `useTour()` (driver.js tour guide).
+- **Composables**: `useAuth()`, `usePageTitle()`, `useTour()` (driver.js), `useRealtime()` (WebSocket).
 - **Tour guide**: steps defined in `useTour.ts` for `/boards` and `/boards/[id]`, triggered by `TourTrigger` component; `data-tour="..."` attributes on target elements.
 - **Drag & drop**: `vue3-smooth-dnd` on the board page for lists and cards; positions updated via PATCH list/card.
+
+### Real-time collaboration
+
+- **SSE** : Server-Sent Events via `GET /api/realtime/:boardId` — fonctionne en dev et en production.
+- **Client** : `useRealtime(boardId, onEvent)` — `EventSource` avec reconnexion automatique et envoi des cookies pour l’auth.
+- **Broadcast** : les API (cards, lists, comments, labels, boards) appellent `broadcastToBoard(boardId, event)` après chaque mutation.
+- **Événements** : `board:update`, `list:create`/`update`/`delete`, `card:create`/`update`/`delete`, `comment:create`/`delete`, `label:create`.
+- **UX** : indicateur de connexion (point vert/orange) à côté du nom du board ; rafraîchissement automatique du board et des commentaires en modal.
 
 ---
 

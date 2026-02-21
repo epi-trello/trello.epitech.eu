@@ -1,3 +1,5 @@
+import { broadcastToBoard } from '../../utils/realtime'
+
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession(event)
 
@@ -45,6 +47,8 @@ export default defineEventHandler(async (event) => {
       },
       data
     })
+
+    broadcastToBoard(list.boardId, { type: 'list:update' })
 
     return list
   } catch (error: any) {

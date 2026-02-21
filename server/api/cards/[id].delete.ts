@@ -1,3 +1,5 @@
+import { broadcastToBoard } from '../../utils/realtime'
+
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession(event)
 
@@ -30,8 +32,11 @@ export default defineEventHandler(async (event) => {
             ]
           }
         }
-      }
+      },
+      include: { list: { select: { boardId: true } } }
     })
+
+    broadcastToBoard(card.list.boardId, { type: 'card:delete', cardId: id })
 
     return card
   } catch (error: any) {

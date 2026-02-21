@@ -1,4 +1,5 @@
 import { generateId } from 'better-auth'
+import { broadcastToBoard } from '../../../utils/realtime'
 
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession(event)
@@ -61,6 +62,8 @@ export default defineEventHandler(async (event) => {
       boardId
     }
   })
+
+  broadcastToBoard(boardId, { type: 'label:create' })
 
   return label
 })

@@ -1,5 +1,6 @@
 import { generateId } from 'better-auth'
 import { z } from 'zod'
+import { broadcastToBoard } from '../../../utils/realtime'
 
 const CommentInputSchema = z.object({
   text: z.string().min(1, 'Comment cannot be empty')
@@ -62,9 +63,13 @@ export default defineEventHandler(async (event) => {
     include: {
       user: {
         select: { id: true, name: true, image: true }
-      }
+      },
+      card: { select: { list: { select: { boardId: true } } } }
     }
   })
+
+  const boardId = comment.card.list.boardId
+  broadcastToBoard(boardId, { type: 'comment:create', cardId })
 
   return comment
 })

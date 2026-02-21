@@ -1,4 +1,5 @@
 import { generateId } from 'better-auth'
+import { broadcastToBoard } from '../../utils/realtime'
 
 const POSITION_GAP = 1000
 
@@ -49,6 +50,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  const boardId = isAuthorized.id
+
   const aggregation = await prisma.card.aggregate({
     _max: { position: true },
     where: { listId: data.listId }
@@ -74,6 +77,8 @@ export default defineEventHandler(async (event) => {
       }
     }
   })
+
+  broadcastToBoard(boardId, { type: 'card:create', listId: data.listId })
 
   return card
 })

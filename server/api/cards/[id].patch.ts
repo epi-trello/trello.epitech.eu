@@ -1,3 +1,5 @@
+import { broadcastToBoard } from '../../utils/realtime'
+
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession(event)
 
@@ -41,7 +43,11 @@ export default defineEventHandler(async (event) => {
           }
         }
       },
-      include: { labels: true, assignees: true },
+      include: {
+        labels: true,
+        assignees: true,
+        list: { select: { boardId: true } }
+      },
       data: {
         ...data,
         startDate: data.startDate ? new Date(data.startDate) : undefined,
@@ -57,6 +63,11 @@ export default defineEventHandler(async (event) => {
             }
           : undefined
       }
+    })
+
+    broadcastToBoard(card.list.boardId, {
+      type: 'card:update',
+      cardId: card.id
     })
 
     return card

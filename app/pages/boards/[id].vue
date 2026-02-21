@@ -2,6 +2,7 @@
 // @ts-ignore
 import { Container, Draggable } from 'vue3-smooth-dnd'
 import { z } from 'zod'
+import { useRealtime, type RealtimeEvent } from '~/composables/useRealtime'
 import type { FormSubmitEvent } from '@nuxt/ui'
 
 definePageMeta({
@@ -11,8 +12,24 @@ definePageMeta({
 const { params } = useRoute()
 const title = usePageTitle()
 const { add } = useToast()
+const boardId = computed(() => params.id as string)
 
 const { data: _board, refresh } = await useFetch(`/api/boards/${params.id}`)
+
+const cardRefreshTrigger = ref<Set<string>>(new Set())
+const labelsRefreshTrigger = ref(0)
+provide('realtime:cardRefresh', cardRefreshTrigger)
+provide('realtime:labelsRefresh', labelsRefreshTrigger)
+
+const { isConnected } = useRealtime(boardId, (event: RealtimeEvent) => {
+  refresh()
+  if (event.type === 'comment:create' || event.type === 'comment:delete') {
+    cardRefreshTrigger.value = new Set([...cardRefreshTrigger.value, event.cardId])
+  }
+  if (event.type === 'label:create') {
+    labelsRefreshTrigger.value += 1
+  }
+})
 const board = ref(_board.value)
 
 if (!_board.value) {
@@ -328,6 +345,14 @@ const membersModalOpen = ref(false)
         </template>
         <template v-else>
           <span class="truncate">{{ board?.name ?? 'Unknown' }}</span>
+          <UTooltip
+            :text="isConnected ? 'Connecté en temps réel' : 'Connexion en cours…'"
+          >
+            <span
+              class="inline-flex size-2 shrink-0 rounded-full"
+              :class="isConnected ? 'bg-success' : 'bg-warning animate-pulse'"
+            />
+          </UTooltip>
           <UButton
             icon="i-ph-pencil-simple"
             size="xs"

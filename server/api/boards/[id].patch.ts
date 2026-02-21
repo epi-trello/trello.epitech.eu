@@ -1,3 +1,5 @@
+import { broadcastToBoard } from '../../utils/realtime'
+
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession(event)
 
@@ -24,6 +26,8 @@ export default defineEventHandler(async (event) => {
     where: { id, ownerId: session.user.id },
     data
   })
+
+  broadcastToBoard(id, { type: 'board:update' })
 
   return board
 })

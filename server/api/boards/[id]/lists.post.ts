@@ -1,4 +1,5 @@
 import { generateId } from 'better-auth'
+import { broadcastToBoard } from '../../../utils/realtime'
 
 const POSITION_GAP = 1000
 
@@ -72,6 +73,8 @@ export default defineEventHandler(async (event) => {
       boardId
     }
   })
+
+  broadcastToBoard(boardId, { type: 'list:create' })
 
   return list
 })

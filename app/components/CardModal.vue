@@ -11,17 +11,39 @@ const emits = defineEmits<{
 }>()
 
 const { user } = useAuth()
+
+// Rafraîchir la carte quand des commentaires changent (via provide du parent)
+const cardRefreshTrigger = inject<Ref<Set<string>>>('realtime:cardRefresh', ref(new Set()))
+watch(
+  () => cardRefreshTrigger.value.has(props.cardId),
+  (needsRefresh) => {
+    if (needsRefresh) {
+      refresh()
+      cardRefreshTrigger.value = new Set(
+        [...cardRefreshTrigger.value].filter((id) => id !== props.cardId)
+      )
+    }
+  }
+)
 const { add } = useToast()
 
 const { data: card, refresh } = await useFetch(`/api/cards/${props.cardId}`)
 
-const { data: labels } = await useFetch(`/api/boards/${props.boardId}/labels`, {
-  transform: (data) =>
-    data.map((label) => ({
-      value: label.id,
-      label: label.name,
-      color: label.color
-    }))
+const { data: labels, refresh: refreshLabels } = await useFetch(
+  `/api/boards/${props.boardId}/labels`,
+  {
+    transform: (data) =>
+      data.map((label) => ({
+        value: label.id,
+        label: label.name,
+        color: label.color
+      }))
+  }
+)
+
+const labelsRefreshTrigger = inject<Ref<number>>('realtime:labelsRefresh', ref(0))
+watch(labelsRefreshTrigger, (newVal, oldVal) => {
+  if (oldVal !== undefined && newVal !== oldVal) refreshLabels()
 })
 
 const { data: members } = await useFetch(
